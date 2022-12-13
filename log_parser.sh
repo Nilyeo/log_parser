@@ -2,7 +2,7 @@
 # Usage: sh log_parser.sh [folder_name]
 # for example: 
 # sh log_parser.sh Q211I009382
-#!/bin/sh
+# !/bin/sh
 
 ######################################
 # log_parser                         #
