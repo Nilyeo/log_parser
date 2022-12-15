@@ -77,6 +77,8 @@
 # * to do .russian model show D4 Rev-B, in /etc/hal.conf:model = TS-431K, real model can be found
 # 2022-12-6
 # * Seperate system log and access log
+# 2022-12-14
+# *  Add call trace detection and happened date in kernel log 
 ######################################
 
 
@@ -338,6 +340,7 @@ cat $Path/Q*.html|sed -n '/\-qv/,$p' | sed -n '/Done/q;p' > $LPP/systemlog
 cat $Path/Q*.html| sed -n '/\-\-gpdr/,$p' | sed -n '/Done/q;p'| sed -n '/\=\ \[\ D/q;p' > $LPP/accesslog
 
 #cat $LPP/accesslog | awk -F "," '{print $1,$2,$3,$4,$5}'
+# cat $LPP/accesslog | awk -F, '{print $3" "$5" "$6" "$13" "$14" "}'
 
 ## Kernel log
 cat $Path/Q*.html | grep -e '<[0-9]>' -e "\[Diagnostic" >$LPP/kernellog
@@ -1122,9 +1125,10 @@ Kernellog_questions(){
         echo 3. ATA bus error/Media error/IO error
         echo 4. Boot up history
         echo 5. dmesg before shut down
+        echo 6. Call trace date
         printf "\n"
         echo or use the command: 
-        echo cat $LPP\/systemlog \| grep your_keyword
+        echo cat $LPP\/kernellog \| grep your_keyword
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -1193,6 +1197,16 @@ Kernellog_input(){
         clear
 
             cat $LPP/kernellog |grep -e mklog -e "\[Diagnostic" -B 10
+
+        press_enter
+        kernellog_information
+        ;;
+
+
+        6)
+        clear
+
+            cat $LPP/kernellog | grep -i "call trace:" | awk '{print $1}' | sort -u
 
         press_enter
         kernellog_information
@@ -2106,6 +2120,18 @@ IO_error_Checking(){
         fi
 }
 
+Call_trace_Checking(){
+    
+        if grep -q "Call Trace:" $LPP/kernellog; then
+        call_trace_date=$(grep "Call Trace:" $LPP/kernellog | tail -n 1 | grep -o "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]")    
+        printf "\e[0;31mLatest Call Trace on $call_trace_date\e[0m\n"
+        #echo "I/O error!!"
+        else
+            :
+        fi
+}
+
+
 
 Pool_error_checking(){
 
@@ -2380,6 +2406,7 @@ UnknownDevice_error_checking
 ReadDelete_error_checking
 QSA2224_checking
 fcorig_error_checking
+Call_trace_Checking
 
 
 
