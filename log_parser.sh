@@ -79,6 +79,8 @@
 # * Seperate system log and access log
 # 2022-12-14
 # *  Add call trace detection and happened date in kernel log 
+# 2022-12-19
+# * Check highest and lowest SMB version in smb.conf
 ######################################
 
 
@@ -979,7 +981,12 @@ esac
 
 
 Shared_folders_information(){
-	cat $Path/etc/config/smb.conf | grep -e "passdb" -e "server signing"
+
+    echo Highest and lowest SMB version
+    cat $Path/etc/config/smb.conf | grep -e protocol
+    printf "\n"
+    echo NAS is joined Domain or not
+	cat $Path/etc/config/smb.conf | grep -e "passdb" -e "server signing" 
 	printf "\n"
 	#cat $Path/etc/config/smb.conf | grep -e '\[' -e Enable -e path | grep -v "\[g"
     #awk '{printf "%-6s  %-25s %-10s %-10s %-15s %-30s %-15s %-15s %-15s %-15s %-15s %-15s %-15s\n",$1,$8,$2,$3,$4,$5,$6,$7,$12,$13,$14,$15,$16}' $LPP/.shared_folders.tmp
