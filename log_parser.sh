@@ -81,6 +81,10 @@
 # *  Add call trace detection and happened date in kernel log 
 # 2022-12-19
 # * Check highest and lowest SMB version in smb.conf
+# 2022-12-20
+# * add latset app can be installed on the NAS 
+# 2022-12-21
+# * Checking guest access 
 ######################################
 
 
@@ -364,7 +368,9 @@ QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for 
 
 
 
-
+TinySys(){
+ awk -F "," '{print $3,$4,$8 }'
+}
 
 
 
@@ -695,6 +701,7 @@ RAID_questions(){
         echo 3. RAID.conf info
         echo 4. mdadm \-E
         echo 5. kernel log message regarding RAID
+        echo 6. System log message regarding RAID
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -781,7 +788,15 @@ RAID_input(){
         ;;
 
 
+        6)
+        clear
 
+        echo RAID
+        cat $LPP/systemlog | grep "RAID" | TinySys
+
+        press_enter 
+        RAID_information
+        ;;
 
 
 		q)
@@ -803,10 +818,14 @@ esac
 
 
 APP_informaiton(){
+APP_question
+APP_input
+
  # cat $Path/etc/config/qpkg.conf | grep -e '\[' -e Enable -e Version -e Author -e Install_Path
 
 # rm -f $LPP/appinfo
-printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n" "App name" "Author" "Enable" "Version" "Status" "Date" 
+#printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n" "App name" "Author" "Enable" "Version" "Status" "Date" 
+#cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6}'
 #for (( i=1; i<=$lp_AppNumber; i=i+1 ));
 #do 
 #echo ${lp_AppName[i]} ${lp_App_Author[i]} ${lp_App_Enable[i]} ${lp_AppVersion[i]} ${lp_APP_Status[i]} ${lp_App_Date[i]}     | tee -a $LPP/appinfo 1>/dev/null 2>&1
@@ -816,11 +835,83 @@ printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n" "App name" "Author" "Enab
 
 
 # cat $LPP/appinfo | sed 's/ //g' |sed 's/,/ /g' | awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n",$7,$3,$4,$5,$6,$1,$2}'
-cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6}'
+# cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6}'
+
+#echo $lp_platform
+#echo $QTSv_shortform
+#echo https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml
+#curl https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml | grep zip | sort -u | grep -e $lp_platform -e master | cut -c 48- | sed 's/\<\/location\>//g' > $LPP/latestappinfo #| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+#curl https://download.qnap.com/Liveupdate/QTS$QTSB/qpkgcenter_eng.xml | grep zip | sort -u #| grep -e $lp_platform -e master| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+
+
+#cat $LPP/appinfo | sort -t " " -nk1| awk '{print $1,grep $1 $LPP/latestappinfo}'
+#printf "\n"
+#cat $LPP/latestappinfo
+}
+
+APP_question(){
+
+        echo question:
+        echo 1. Installed APP
+        echo 2. Latest APP can be installed
+        # echo 3. ATA bus error/Media error/IO error
+        printf "\n"
+        printf "\n"
+        echo q. Leave
+        printf "\n"
+        echo Input Number:
+
+        read APANS
+
+}
+
+APP_input(){
+
+
+
+    case $APANS in
+        1)
+        clear 
+
+        printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n" "App name" "Author" "Enable" "Version" "Status" "Date" 
+        cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6}'
+
+        press_enter 
+        APP_informaiton
+
+        ;;
+        2)
+        clear
+
+        echo 2
+
+        echo $lp_platform
+        echo $QTSv_shortform
+        echo https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml
+        curl https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml | grep zip | sort -u | grep -e $lp_platform -e master | cut -c 48- | sed 's/\<\/location\>//g' > $LPP/latestappinfo #| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+        #curl https://download.qnap.com/Liveupdate/QTS$QTSB/qpkgcenter_eng.xml | grep zip | sort -u #| grep -e $lp_platform -e master| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+
+
+
+
+        press_enter 
+        APP_informaiton
+        ;;
+        q)
+        ;;
+
+
+         *)
+        echo "Not supported"
+        
+        ;;
+esac
 
 
 
 }
+
+
 
 
 Disk_information(){
@@ -985,8 +1076,9 @@ Shared_folders_information(){
     echo Highest and lowest SMB version
     cat $Path/etc/config/smb.conf | grep -e protocol
     printf "\n"
-    echo NAS is joined Domain or not
-	cat $Path/etc/config/smb.conf | grep -e "passdb" -e "server signing" 
+    echo NAS is joined Domain or not and ABSE setting
+	cat $Path/etc/config/smb.conf | grep -e "passdb" -e "server signing" -e "restrict a" -e "guest ok" -e "map to guest"
+    echo Restrict Anonymous 0 means disabled
 	printf "\n"
 	#cat $Path/etc/config/smb.conf | grep -e '\[' -e Enable -e path | grep -v "\[g"
     #awk '{printf "%-6s  %-25s %-10s %-10s %-15s %-30s %-15s %-15s %-15s %-15s %-15s %-15s %-15s\n",$1,$8,$2,$3,$4,$5,$6,$7,$12,$13,$14,$15,$16}' $LPP/.shared_folders.tmp
@@ -1073,7 +1165,7 @@ Systemlog_input(){
 			clear
 
 
-            cat $LPP/systemlog
+            cat $LPP/systemlog 
 
 
             press_enter 
@@ -2049,10 +2141,7 @@ done
 #cat $Path/tmp/.porter.log  | grep "generate_device_package_list" | sed 's/\ \}\,\ /\n/g'| tr "{" " "| tr "\"" " " | sed 's/\ //g'
 #echo get latest app version via QTS version
 
-echo $lp_platform
-echo $QTSv_shortform
-curl https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml | grep zip | sort -u | grep -e $lp_platform -e master #| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
-#curl https://download.qnap.com/Liveupdate/QTS$QTSB/qpkgcenter_eng.xml | grep zip | sort -u #| grep -e $lp_platform -e master| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+
 
          cat $LPP/lvdisplay| grep "tp[0-9]_tmeta" -B 5 -A 6 | grep -e "LV Name" -e "Allocated pool" | sed 's/\ \ Allocated\ pool\ data/allocated/g' | sed 's/\ \ Allocated\ pool\ chunks/chunk/g'| tr -d ".,%,\r"|sed 's/\ \ LV\ Name/tpname/g' | tr -s " "| tr " " "=" > $LPP/tp_remainsize
 
@@ -2313,7 +2402,21 @@ else
 fi
 }
 
+Pstore_checking(){
 
+ls $Path/sys/fs/pstore/console* 1>/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+
+    :
+else
+    printf "\e[0;31mPSTORE log found\e[0m\n"
+fi
+
+
+
+
+}
 
 
 #echo The folder path:
@@ -2414,6 +2517,7 @@ ReadDelete_error_checking
 QSA2224_checking
 fcorig_error_checking
 Call_trace_Checking
+Pstore_checking
 
 
 
