@@ -85,6 +85,8 @@
 # * add latset app can be installed on the NAS 
 # 2022-12-21
 # * Checking guest access 
+# * Get external device
+# * cat pstore file
 ######################################
 
 
@@ -934,6 +936,7 @@ Disk_question(){
         echo 1. Qcli_storage
         echo 2. SMART_info
         echo 3. ATA bus error/Media error/IO error
+        echo 4. Expansion cards or units
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -1043,6 +1046,16 @@ else
 
 
             cat $LPP/kernellog |grep -e "ATA bus error" -e "media error" -e "I/O error" --color=auto
+
+        press_enter
+        Disk_information
+        ;;
+
+            4)
+        clear
+
+
+              cat $Path/Q*.html| grep "= \[ hal_app --se_enum " -A 50| grep QNAP | grep -v BOOT | grep -v USB 
 
         press_enter
         Disk_information
@@ -1225,6 +1238,7 @@ Kernellog_questions(){
         echo 4. Boot up history
         echo 5. dmesg before shut down
         echo 6. Call trace date
+        echo 7. Cat PSTORE files
         printf "\n"
         echo or use the command: 
         echo cat $LPP\/kernellog \| grep your_keyword
@@ -1311,6 +1325,16 @@ Kernellog_input(){
         kernellog_information
         ;;
 
+
+
+        7)
+        clear
+
+            cat $Path/sys/fs/pstore/con*
+
+        press_enter
+        kernellog_information
+        ;;
 
 
         q)
@@ -2138,13 +2162,8 @@ done
      
 
         echo testoutput
-#cat $Path/tmp/.porter.log  | grep "generate_device_package_list" | sed 's/\ \}\,\ /\n/g'| tr "{" " "| tr "\"" " " | sed 's/\ //g'
-#echo get latest app version via QTS version
 
-
-
-         cat $LPP/lvdisplay| grep "tp[0-9]_tmeta" -B 5 -A 6 | grep -e "LV Name" -e "Allocated pool" | sed 's/\ \ Allocated\ pool\ data/allocated/g' | sed 's/\ \ Allocated\ pool\ chunks/chunk/g'| tr -d ".,%,\r"|sed 's/\ \ LV\ Name/tpname/g' | tr -s " "| tr " " "=" > $LPP/tp_remainsize
-
+        
 
 
 
