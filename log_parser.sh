@@ -87,6 +87,14 @@
 # * Checking guest access 
 # * Get external device
 # * cat pstore file
+# 2022-12-24
+# * add 41 and 11 command for tiny system log
+# * add colorsys function
+# * get zfsgetall
+# 2022-12-26
+# * Calculate zfs used pool size
+# * enhance network informaiton.
+# * eth0 check
 ######################################
 
 
@@ -334,6 +342,11 @@ chmod 755 $LPP/ssdcache_cg_parameter
 source $LPP/ssdcache_cg_parameter
 
 
+## Generate Network log
+cat $Path/Q*.html| sed -n '/sbin\/ifconfig/,$p' | sed -n '/IRQ\_INFO/q;p'| sed -n '/\=\ \[\ D/q;p' > $LPP/network
+
+
+
 ## myqnapcloudurl
 myQNAPCloudUrl=$lp_DEVICENAME'.myqnapcloud.com'
 
@@ -365,15 +378,28 @@ cat $Path/Q*.html| grep "[0-9]\ admin\ \ " > $LPP/process
 ## gernate special variables
 QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for example 5.0.1_0423 > 5.0.1
 
+## generate zfsgetall
+#cat $Path/Q*.html| grep -i "zfs get all" -A 1500 | grep zpool1 | grep -v "202*-" > $LPP/zfsgetall
 
+cat $Path/Q*.html| sed -n '/zfs\ get\ all\ \]\ /,$p' | sed -n '/history\ \-i/q;p' | grep -v "history\_" > $LPP/zfsgetall
+cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
+grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ " | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
+cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
 }
 
 
+
+#TinySys(){
+# awk -F "," '{print $3,$4,$8 }'
+#}
 
 TinySys(){
- awk -F "," '{print $3,$4,$8 }'
+awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $3,$4,$8   } else if ($2==2){print "\033[35m"e"\033[35m" $3,$4,$8} else if ($2==0){print "\033[39"n"\033[39m" $3,$4,$8}     }'; echo "\033[0m"
 }
 
+ColorSys(){
+awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $0   } else if ($2==2){print "\033[35m"e"\033[35m" $0} else if ($2==0){print "\033[39"n"\033[39m" $0}     }'; echo "\033[0m"
+}
 
 
 Basic_information(){
@@ -890,7 +916,8 @@ APP_input(){
         echo $lp_platform
         echo $QTSv_shortform
         echo https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml
-        curl https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml | grep zip | sort -u | grep -e $lp_platform -e master | cut -c 48- | sed 's/\<\/location\>//g' > $LPP/latestappinfo #| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
+
+        curl https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml | grep zip | sort -u | grep -e $lp_platform -e master | cut -c 48- | sed 's/\<\/location\>//g' # > $LPP/latestappinfo #| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
         #curl https://download.qnap.com/Liveupdate/QTS$QTSB/qpkgcenter_eng.xml | grep zip | sort -u #| grep -e $lp_platform -e master| grep -v HDV3 |sed -e 's/<[^>]*>//g' 
 
 
@@ -1112,11 +1139,13 @@ Systemlog_questions(){
 	    clear
 	   
         echo What information do you need from system log
-        echo 1. Grep system log using keyowrd
+        echo 1. Grep system log using keyowrd \(or 11\)
         echo 2. Firmware upgrade history
         echo 3. Abnormal Reboot history
-        echo 4. Print all system log
+        echo 4. Print all system log \(or 41\)
         echo 5. Print access log
+        #echo 6. Show only warning system log
+        #echo 7. Show only error system log
         printf "\n"
         echo or use the command: 
         echo cat $LPP\/systemlog \| grep your_keyword
@@ -1141,7 +1170,23 @@ Systemlog_input(){
             read grepfilter1 grepfilter2
             echo how many lines around keyord:
             read kround
-            cat $LPP/systemlog | grep -i "$grepfilter2" | grep -i "$grepfilter1" --color=auto -$kround 
+            cat $LPP/systemlog | ColorSys | grep -i "$grepfilter2" | grep -i "$grepfilter1" --color=auto -$kround 
+            #cat $LPP/systemlog | grep -E --color=auto '^|$grepfilter1|$grepfilter2'   # -$kround
+
+  
+            press_enter 
+            Systemlog_information          
+           
+             ;;
+
+              11)
+            clear
+
+            echo Input your Keyword,the first keyword will be colored
+            read grepfilter1 grepfilter2
+            echo how many lines around keyord:
+            read kround
+            cat $LPP/systemlog | TinySys | grep -i "$grepfilter2" | grep -i "$grepfilter1" --color=auto -$kround 
             #cat $LPP/systemlog | grep -E --color=auto '^|$grepfilter1|$grepfilter2'   # -$kround
 
   
@@ -1154,7 +1199,7 @@ Systemlog_input(){
 			clear
 
 
-            cat $LPP/systemlog |grep from | grep -i firmware
+            cat $LPP/systemlog  |grep from | grep -i firmware
 
 
             press_enter 
@@ -1165,7 +1210,7 @@ Systemlog_input(){
 			clear
 
 
-            cat $LPP/systemlog | grep -i -e "not shut down" -e "not shutdown"
+            cat $LPP/systemlog  | grep -i -e "not shut down" -e "not shutdown"
 
             press_enter 
             Systemlog_information       
@@ -1177,8 +1222,21 @@ Systemlog_input(){
             4)
 			clear
 
+ # echo 0,0,END >> $LPP/systemlog | cat $LPP/systemlog | ColorSys 
 
-            cat $LPP/systemlog 
+                    cat $LPP/systemlog | ColorSys 
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+             41)
+            clear
+
+
+            cat $LPP/systemlog | TinySys
 
 
             press_enter 
@@ -1198,6 +1256,32 @@ Systemlog_input(){
             
              ;;
 
+
+
+
+            6)
+            clear
+
+
+            cat $LPP/systemlog | awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $0   }    }' ; echo "\033[0m"
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+                         7)
+            clear
+
+
+            cat $LPP/systemlog |awk -F\, '{ if ($2==2){print "\033[35m"e"\033[35m" $0}     }' ; echo "\033[0m"
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
 
             q)
@@ -1354,9 +1438,77 @@ Kernellog_input(){
 }
 
 
-Network_information(){
-        cat $Path/Q*.html | grep -e "Link encap" -e inet -e "Metric:" -e "RX packets" -e "TX packets" -e collision -e "RX bytes"
-        cat $Path/Q*.html | grep "Kernel IP" -A 5
+Network_information()
+{
+
+Network_questions
+Network_input
+
+}
+
+
+
+
+Network_questions()
+
+{
+
+
+        echo question:
+        echo 1. ifconfig
+        echo 2. route
+        echo 3. outgoing log
+        echo 4. gateway policy
+        echo 5. devices used to connect to the NAS
+        printf "\n"
+        printf "\n"
+        echo q. Leave
+        printf "\n"
+        echo Input Number:
+
+        read NTANS
+
+
+        
+        
+
+       
+
+}
+
+Network_input()
+{
+
+
+
+    case $NTANS in
+        1)
+        clear 
+
+        echo ifconfig
+        cat $LPP/network | sed -n '/G\_TA/q;p' | grep -v ifconfig
+
+
+        press_enter 
+        Network_information
+
+        ;;
+        2)
+        clear
+
+        echo Route 
+        cat $LPP/network | grep "Kernel IP" -A 5
+
+
+        press_enter 
+       Network_information
+        ;;
+
+
+        3)
+        clear
+
+        echo outloging
 
         printf "\n"
         echo outgoing.log
@@ -1367,12 +1519,71 @@ Network_information(){
         echo - 3: DNS resolved failed.
         echo - 4: curl failed.
 
+        
+
+
+
+        press_enter 
+        Network_information
+        ;;
+
+
+
+       4)
+        clear
+
         echo gateway policy
         cat $Path/etc/config/nm.conf | grep gateway_policy
+        printf "\n"
          echo gateway policy=1   fixed
          echo gateway policy=2   auto
 
+
+        press_enter 
+       Network_information
+        ;;
+
+
+5)
+        clear
+
+       cat $LPP/systemlog |  sed 's/ML,\ /ML\ /' | awk -F, '{print $6,$17}'| grep -v "\-\-\-" | sort -u 
+
+cat $LPP/accesslog|  sed 's/ML,\ /ML\ /' |awk -F, '{print $6,$14}'|  grep -v "\-\-\-" | sort -u
+       
+
+
+        press_enter 
+       Network_information
+        ;;
+
+
+
+
+
+        q)
+        ;;
+
+
+         *)
+        echo "Not supported"
+        
+        ;;
+esac
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
 
 Cache_information(){
 
@@ -1837,6 +2048,10 @@ ZFS_questions(){
         echo 1. zfs get all
         echo 2. zfs type
         echo 3. zpool status
+        echo 4. zfs volume information
+        echo 5. Advanced ZFS information
+
+
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -1857,7 +2072,7 @@ ZFS_input(){
         clear 
 
         echo zfs get all
-        cat $Path/Q*.html| grep -i "zfs get all" -A 1500 | grep zpool1 | grep -v "202*-"
+        cat $LPP/zfsgetall
 
         press_enter 
         ZFS_information
@@ -1889,6 +2104,137 @@ ZFS_input(){
         ZFS_information
 
         ;;
+
+        4)
+        clear 
+
+        echo zfs get all
+       
+
+       
+
+
+# cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation" | grep -v "@snapshot\|@:init\|RecentlySnapshot"
+cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag" | grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool1\ " | sed 's/zpool1\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1
+
+ press_enter 
+        ZFS_information
+
+        ;;
+
+
+        5)
+        clear 
+
+
+####
+       
+clear
+source $LPP/qzfs_parameter
+#lp_VolumeNumber=$(cat qvolume_parameter | grep -i mappingName |wc -l)
+
+#for (( i=1; i<=$lp_VolumeNumber; i=i+1 ));
+for (( i=18; i<=30; i=i+1 ));
+do 
+echo $i
+ZFSVolumeName="ZFS${i}_qnap_zfs_volume_name"
+ZFSRefreservation="ZFS${i}_refreservation"
+ZFSRefquota="ZFS${i}_refquota"
+ZFSSnapRefreservation="ZFS${i}_snap_refreservation"
+ZFSUSED="ZFS${i}_used"
+ZFSUSEDBYDATASET="ZFS${i}_usedbydataset"
+ZFSUSEDBYSNAPSHOTS="ZFS${i}_usedbysnapshots"
+ZFSOVERWRITEReservation="ZFS${i}_overwrite_reservation"
+
+
+
+
+
+echo Volume $i/$lp_VolumeNumber
+echo "Volume Name: ${!ZFSVolumeName}"
+echo "Volume Capacity: ${!ZFSRefquota}"
+
+printf "\n"
+printf "\n"
+
+
+
+
+case ${!ZFSRefreservation} in
+none)
+echo This is a thin shared folder
+echo "Refreservation: ${!ZFSRefreservation}"
+echo "Snap_Refreservation: ${!ZFSSnapRefreservation}"
+echo "Used: ${!ZFSUSED}"
+echo "Usedbydataset: ${!ZFSUSEDBYDATASET} "
+echo "Usedbysnapshots: ${!ZFSUSEDBYSNAPSHOTS}"
+echo "OverwriteReservation: ${!ZFSOVERWRITEReservation}"
+printf "\n"
+echo "Used Pool Size = Used by Data + Used by Snapshots" 
+echo "${!ZFSUSED} = ${!ZFSUSEDBYDATASET} + ${!ZFSUSEDBYSNAPSHOTS}" 
+printf "\n"
+
+;;
+
+*)
+
+echo This is a thick shared folder
+echo "Refreservation: ${!ZFSRefreservation}"
+echo "Snap_Refreservation: ${!ZFSSnapRefreservation}"
+echo "Used: ${!ZFSUSED}"
+echo "Usedbydataset: ${!ZFSUSEDBYDATASET} "
+echo "Usedbysnapshots: ${!ZFSUSEDBYSNAPSHOTS}"
+echo "OverwriteReservation:: ${!ZFSOVERWRITEReservation}"
+
+
+printf "\n"
+
+
+ if [ $(cat $LPP/zfsgetall | grep -i zfs$i\@snap | grep creation | wc -l) = 0 ] ;
+ # if [ $abc=0 ];
+
+ then
+echo snapshot hasn\'t created
+echo "Used Pool Size = Refresevation + Snap Refreservation" 
+echo "${!ZFSUSED} = ${!ZFSRefreservation} + ${!ZFSSnapRefreservation}" 
+
+
+else
+
+
+echo snapshot is created
+
+echo "Used Pool Size = Refresevation + Snap Refreservation  + OverwriteReservation"
+echo "${!ZFSUSED} = ${!ZFSRefreservation} + ${!ZFSSnapRefreservation} + ${!ZFSOVERWRITEReservation}"
+
+fi
+
+
+
+
+
+printf "\n"
+printf "\n"
+
+esac
+
+echo Press enter to process:
+read anything
+clear
+done
+
+
+
+
+#####
+ press_enter 
+        ZFS_information
+
+        ;;
+
+
+
+
 
 
 
@@ -2010,6 +2356,7 @@ helpdesk_questions(){
 #        
         echo question:
         echo 1. Previous ticket and remote sessions opened by helpdesk 
+        echo 2. Display helpdesk log
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -2045,7 +2392,7 @@ helpdesk_input(){
         2)
         clear
 
-     
+        cat $Path/mnt/ext/opt/qdesk/www/data/log/log*
 
         echo testoutput
 
@@ -2158,8 +2505,12 @@ done
 		;;
 		2)
         clear
-
+#cat $LPP/systemlog | awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $0   } else if ($2==2){print "\033[35m"e"\033[35m" $0} else if ($2==0){print "\033[39"n"\033[39m" $0}     }'
      
+cat $LPP/systemlog |  sed 's/ML,\ /ML\ /' | awk -F, '{print $6,$17}'| grep -v "\-\-\-" | sort -u 
+
+cat $LPP/accesslog|  sed 's/ML,\ /ML\ /' |awk -F, '{print $6,$14}'|  grep -v "\-\-\-" | sort -u
+       
 
         echo testoutput
 
@@ -2433,9 +2784,21 @@ else
 fi
 
 
+}
 
+
+eth0_checking(){
+
+
+        if grep -q "eth0" $LPP/network; then
+        :
+        else
+            printf "\e[0;31mNo NIC eth0 \e[0m\n"
+        #echo "I/O error!!"
+        fi
 
 }
+
 
 
 #echo The folder path:
@@ -2537,6 +2900,7 @@ QSA2224_checking
 fcorig_error_checking
 Call_trace_Checking
 Pstore_checking
+eth0_checking
 
 
 
