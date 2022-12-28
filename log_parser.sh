@@ -388,8 +388,9 @@ QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for 
 
 cat $Path/Q*.html| sed -n '/zfs\ get\ all\ \]\ /,$p' | sed -n '/history\ \-i/q;p' | grep -v "history\_" > $LPP/zfsgetall
 cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
-grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ " | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
-cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ " | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+
+
 }
 
 
@@ -1151,10 +1152,16 @@ Systemlog_questions(){
         echo 1. Grep system log using keyowrd \(or 11\)
         echo 2. Firmware upgrade history
         echo 3. Abnormal Reboot history
-        echo 4. Print all system log \(or 41\)
+        echo 4. Print all system log 
         echo 5. Print access log
-        #echo 6. Show only warning system log
-        #echo 7. Show only error system log
+        echo 6. Print system log in short form
+        echo "   61. Power " 
+        echo "   62. Storage & Snapshot " 
+        echo "   63. Hybrid Backup sync " 
+        echo "   64. Cache  "
+
+        #echo 7. Show only warning system log
+        #echo 8. Show only error system log
         printf "\n"
         echo or use the command: 
         echo cat $LPP\/systemlog \| grep your_keyword
@@ -1242,18 +1249,7 @@ Systemlog_input(){
             
              ;;
 
-             41)
-            clear
-
-
-            cat $LPP/systemlog | TinySys
-
-
-            press_enter 
-            Systemlog_information      
             
-             ;;
-
             5)
             clear
 
@@ -1267,9 +1263,74 @@ Systemlog_input(){
              ;;
 
 
-
-
             6)
+            clear
+
+
+            cat $LPP/systemlog | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+
+            61)
+            clear
+
+ # echo 0,0,END >> $LPP/systemlog | cat $LPP/systemlog | ColorSys 
+
+                    cat $LPP/systemlog | grep "\[Power" |TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+             62)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Sto" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+            63)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Hyb" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+            64)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Sto" | grep cache| TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+
+
+            7)
             clear
 
 
@@ -1281,7 +1342,7 @@ Systemlog_input(){
             
              ;;
 
-                         7)
+                         8)
             clear
 
 
@@ -2156,9 +2217,24 @@ source $LPP/qzfs_parameter
 #lp_VolumeNumber=$(cat qvolume_parameter | grep -i mappingName |wc -l)
 
 #for (( i=1; i<=$lp_VolumeNumber; i=i+1 ));
-for (( i=18; i<=30; i=i+1 ));
+ZFS_DefaultVolNumber=$(cat $LPP/qzfs_parameter | grep -e "ZFS[1-9]\_refquota"|wc -l)
+ZFS_VolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS[1-3][0-9]\_refquota"|wc -l)+17))
+ZFS_AppVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS[1-3][0-9]\_refquota"|wc -l)+529))
+ZFS_SystemVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS110[7-9]\_refquota"|wc -l)+1106))
+
+#for (( i=18; i<$ZFS_volnumber+18; i=i+1 ));
+
+#VolArray=($(seq 1 $ZFS_DefaultVolNumber) $(seq 18 $ZFS_VolNumber) $(seq 530 $ZFS_AppVolNumber) $(seq 1107 $ZFS_SystemVolNumber))
+#for str in ${VolArray[@]}; do
+#  echo $(ZFS!{str}_refquota)
+#done
+
+for i in $(seq 1 $ZFS_DefaultVolNumber) $(seq 18 $ZFS_VolNumber) $(seq 530 $ZFS_AppVolNumber) $(seq 1107 $ZFS_SystemVolNumber)
+
+
 do 
-echo $i
+echo "#######"
+echo zfs$i
 ZFSVolumeName="ZFS${i}_qnap_zfs_volume_name"
 ZFSRefreservation="ZFS${i}_refreservation"
 ZFSRefquota="ZFS${i}_refquota"
@@ -2172,9 +2248,9 @@ ZFSOVERWRITEReservation="ZFS${i}_overwrite_reservation"
 
 
 
-echo Volume $i/$lp_VolumeNumber
-echo "Volume Name: ${!ZFSVolumeName}"
-echo "Volume Capacity: ${!ZFSRefquota}"
+#echo Volume $i/$lp_VolumeNumber
+echo "Shared Folder Name: ${!ZFSVolumeName}"
+echo "Shared Folder Capacity: ${!ZFSRefquota}"
 
 printf "\n"
 printf "\n"
