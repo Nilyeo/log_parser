@@ -95,6 +95,11 @@
 # * Calculate zfs used pool size
 # * enhance network informaiton.
 # * eth0 check
+# 2022-12-26
+# * add k and s command
+# 2022-12-27
+# * add momery upgrade checking
+# * mounted data checking
 ######################################
 
 
@@ -728,7 +733,7 @@ RAID_questions(){
         echo 2. mdstat
         echo 3. RAID.conf info
         echo 4. mdadm \-E
-        echo 5. kernel log message regarding RAID
+        echo 5. kernel log message regarding ATA DRBD MD DEVICE-MAPPER CACHE
         echo 6. System log message regarding RAID
         printf "\n"
         printf "\n"
@@ -808,8 +813,7 @@ RAID_input(){
         clear
 
         echo md
-        cat $LPP/kernellog | grep "md:"
-
+        cat $LPP/kernellog | grep -i "device-mapper\|md\|drbd\|ext\|cache\|ata"
 
         press_enter 
         RAID_information
@@ -825,6 +829,11 @@ RAID_input(){
         press_enter 
         RAID_information
         ;;
+
+
+
+
+
 
 
 		q)
@@ -1151,6 +1160,7 @@ Systemlog_questions(){
         echo cat $LPP\/systemlog \| grep your_keyword
         printf "\n"
         printf "\n"
+        echo k. Kernellog Information
         echo q. Leave
         printf "\n"
         echo Input Number:
@@ -1284,6 +1294,12 @@ Systemlog_input(){
              ;;
 
 
+             k)
+
+            kernellog_information
+             ;;
+
+
             q)
 
 			;;
@@ -1312,7 +1328,7 @@ kernellog_information(){
 
 
 Kernellog_questions(){
-
+        clear
 
         echo "##########"
         echo What information do you need from kernel log
@@ -1328,6 +1344,7 @@ Kernellog_questions(){
         echo cat $LPP\/kernellog \| grep your_keyword
         printf "\n"
         printf "\n"
+        echo s. Systemlog Information
         echo q. Leave
         printf "\n"
         echo Input Number:
@@ -1418,6 +1435,11 @@ Kernellog_input(){
 
         press_enter
         kernellog_information
+        ;;
+
+        s)
+        Systemlog_information
+
         ;;
 
 
@@ -1828,7 +1850,7 @@ Process_input(){
         clear
 
         echo test2
-        cat $LPP/process | grep M |sort -k4 
+        cat $LPP/process | grep "M\ " |sort -k4 
 
 
 
@@ -2793,7 +2815,34 @@ eth0_checking(){
         if grep -q "eth0" $LPP/network; then
         :
         else
-            printf "\e[0;31mNo NIC eth0 \e[0m\n"
+            printf "\e[0;31mNo NIC eth0: WOL issue \e[0m\n"
+        #echo "I/O error!!"
+        fi
+
+}
+
+Upgrade_Memory_checking(){
+
+    RAMupgraded=$(cat $LPP/kernellog  |grep Memory:  | cut -d \( -f1 |cut -d \/ -f2 | sort -u |wc -l)
+        #echo $RAMupgraded
+
+        if [$RAMupgraded = "1" ]; then
+        :
+        else
+            printf "\e[0;31mRAM upgraded before(or NAS migrated before)\e[0m\n"
+            #cat $LPP/kernellog  |grep Memory:  | cut -d \( -f1 |cut -d \/ -f2 | sort -u
+        
+        fi
+
+}
+
+Mounted_DATA_checking(){
+
+
+        if grep -q "DATA" $LPP/df; then
+        :
+        else
+            printf "\e[0;31mNo DATA is mounted \e[0m\n"
         #echo "I/O error!!"
         fi
 
@@ -2901,7 +2950,8 @@ fcorig_error_checking
 Call_trace_Checking
 Pstore_checking
 eth0_checking
-
+Upgrade_Memory_checking
+Mounted_DATA_checking
 
 
 
