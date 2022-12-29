@@ -95,10 +95,16 @@
 # * Calculate zfs used pool size
 # * enhance network informaiton.
 # * eth0 check
-# 2022-12-26
 # * add k and s command
 # 2022-12-27
 # * add momery upgrade checking
+# * mounted data checking
+# 2022-12-28
+# * using seq Num1 Num2 to list volume number > using awk to list zfs_info in $1  
+# 
+# * mounted data checking
+# 2022-12-29
+# * check on which pool
 # * mounted data checking
 ######################################
 
@@ -387,10 +393,14 @@ QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for 
 #cat $Path/Q*.html| grep -i "zfs get all" -A 1500 | grep zpool1 | grep -v "202*-" > $LPP/zfsgetall
 
 cat $Path/Q*.html| sed -n '/zfs\ get\ all\ \]\ /,$p' | sed -n '/history\ \-i/q;p' | grep -v "history\_" > $LPP/zfsgetall
+#cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
+#grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | \
+#sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+
+
 cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
-grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ " | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
-
-
+grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
+cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
 }
 
 
@@ -1254,7 +1264,7 @@ Systemlog_input(){
             clear
 
 
-            cat $LPP/accesslog
+            cat $LPP/accesslog | ColorSys 
 
 
             press_enter 
@@ -2215,12 +2225,13 @@ cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservati
 clear
 source $LPP/qzfs_parameter
 #lp_VolumeNumber=$(cat qvolume_parameter | grep -i mappingName |wc -l)
+# 1 2 3 4 18 19 21 22 23 24 26 27 28 530 531 1107 1108 %
 
 #for (( i=1; i<=$lp_VolumeNumber; i=i+1 ));
-ZFS_DefaultVolNumber=$(cat $LPP/qzfs_parameter | grep -e "ZFS[1-9]\_refquota"|wc -l)
-ZFS_VolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS[1-3][0-9]\_refquota"|wc -l)+17))
-ZFS_AppVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS[1-3][0-9]\_refquota"|wc -l)+529))
-ZFS_SystemVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS110[7-9]\_refquota"|wc -l)+1106))
+#ZFS_DefaultVolNumber=$(cat $LPP/qzfs_parameter | grep -e "ZFS[1-9]\_refquota"|wc -l)
+#ZFS_VolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS[1-3][0-9]\_refquota"|wc -l)+17))
+#ZFS_AppVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS53[0-9]\_refquota"|wc -l)+529))
+#ZFS_SystemVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS110[7-9]\_refquota"|wc -l)+1106))
 
 #for (( i=18; i<$ZFS_volnumber+18; i=i+1 ));
 
@@ -2229,12 +2240,19 @@ ZFS_SystemVolNumber=$(($(cat $LPP/qzfs_parameter | grep -e "ZFS110[7-9]\_refquot
 #  echo $(ZFS!{str}_refquota)
 #done
 
-for i in $(seq 1 $ZFS_DefaultVolNumber) $(seq 18 $ZFS_VolNumber) $(seq 530 $ZFS_AppVolNumber) $(seq 1107 $ZFS_SystemVolNumber)
+#for i in $(seq 1 $ZFS_DefaultVolNumber) $(seq 18 $ZFS_VolNumber) $(seq 530 $ZFS_AppVolNumber) $(seq 1107 $ZFS_SystemVolNumber)
+
+k=""
+
+for i in $(cat $LPP/zfs_info | tr -s " "|awk '{print $1}' | sort -nu | tr "\n" " ")
+
+
 
 
 do 
 echo "#######"
-echo zfs$i
+echo "zfs$i on $(cat $LPP/zfsgetall | awk '{print $1}' | sort -u | grep -v "@\|Re\|3[0-9]/"|grep -w zfs$i | cut -d "/" -f1 )"
+
 ZFSVolumeName="ZFS${i}_qnap_zfs_volume_name"
 ZFSRefreservation="ZFS${i}_refreservation"
 ZFSRefquota="ZFS${i}_refquota"
@@ -2260,7 +2278,7 @@ printf "\n"
 
 case ${!ZFSRefreservation} in
 none)
-echo This is a thin shared folder
+echo This is a thin shared folder 
 echo "Refreservation: ${!ZFSRefreservation}"
 echo "Snap_Refreservation: ${!ZFSSnapRefreservation}"
 echo "Used: ${!ZFSUSED}"
@@ -2279,9 +2297,9 @@ printf "\n"
 echo This is a thick shared folder
 echo "Refreservation: ${!ZFSRefreservation}"
 echo "Snap_Refreservation: ${!ZFSSnapRefreservation}"
-echo "Used: ${!ZFSUSED}"
-echo "Usedbydataset: ${!ZFSUSEDBYDATASET} "
-echo "Usedbysnapshots: ${!ZFSUSEDBYSNAPSHOTS}"
+echo "Used Pool Size: ${!ZFSUSED}"
+echo "Used by data: ${!ZFSUSEDBYDATASET} "
+echo "Used by snapshots: ${!ZFSUSEDBYSNAPSHOTS}"
 echo "OverwriteReservation:: ${!ZFSOVERWRITEReservation}"
 
 
@@ -2308,13 +2326,17 @@ echo "${!ZFSUSED} = ${!ZFSRefreservation} + ${!ZFSSnapRefreservation} + ${!ZFSOV
 fi
 
 
-
-
-
 printf "\n"
 printf "\n"
+
+
 
 esac
+
+#j=$i+$j
+#k="${!ZFSUSED} $k"
+#echo $j
+#echo $k
 
 echo Press enter to process:
 read anything
