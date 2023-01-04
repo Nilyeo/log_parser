@@ -101,8 +101,7 @@
 # * mounted data checking
 # 2022-12-28
 # * using seq Num1 Num2 to list volume number > using awk to list zfs_info in $1  
-# 
-# * mounted data checking
+# * add specif rule to list Storage / HBS / cache setting in system log
 # 2022-12-29
 # * check on which pool
 # * mounted data checking
