@@ -105,6 +105,9 @@
 # 2022-12-29
 # * check on which pool
 # * mounted data checking
+# 2023-01-05
+# * update qcli_storage -d
+# * update md_checker
 ######################################
 
 
@@ -219,7 +222,9 @@ progress_bar
 
 
 ## generate qcli_storage -d
-cat $Path/Q*.html | grep "qcli_storage\ -d" -A 20 | grep -e "NAS_HOST" -e "Enclosure" > $LPP/qclistoraged
+
+cat $Path/Q*.html | sed -n '/ge\ \-d\ \<\/\b\>/,$p' | sed -n '/\[/q;p' | grep -v "</" > $LPP/qclistoraged
+# cat $Path/Q*.html | grep "qcli_storage\ -d" -A 20 | grep -e "NAS_HOST" -e "Enclosure" > $LPP/qclistoraged
 ## Disk informaiton
 cat $Path/etc/enclosure_0.conf | grep model | sed -e 's/model\ \=\ //g' > $LPP/disks
 ## generate disk variables
@@ -237,9 +242,12 @@ progress_bar
 
 
 ## generate md_checker
-cat $Path/Q*.html | grep "\=\ \[\ MD\ CH" -A 100 | grep -e "NAS_HOST" -e "Enclosure" -e Status -e Creation -e Version -e Chunk -e Name -e  Devi -e Leve -e UUID  -e Missing -e active -e "RAID\ m" -e ================= -C 1 > $LPP/.md_checker_tmp
-head -n  $((`cat $LPP/.md_checker_tmp |wc -l`/2)) $LPP/.md_checker_tmp > $LPP/md_checker
+#cat $Path/Q*.html | grep "\=\ \[\ MD\ CH" -A 100 | grep -e "NAS_HOST" -e "Enclosure" -e Status -e Creation -e Version -e Chunk -e Name -e  Devi -e Leve -e UUID  -e Missing -e active -e "RAID\ m" -e ================= -C 1 > $LPP/.md_checker_tmp
 
+
+
+cat $Path/Q*.html |sed -n '/KER\"\>\<\/\a\>/,$p' | sed -n '/IFCONFIG/q;p'| grep -v "</"> $LPP/.md_checker_tmp
+head -n  $((`cat $LPP/.md_checker_tmp |wc -l`/2)) $LPP/.md_checker_tmp > $LPP/md_checker
 
 ## generate mdadm 
 cat $Path/Q*.html |  grep "ENCLOSURE_0 PORT" -A 28 > $LPP/.mdadmE_tmp
@@ -2065,8 +2073,10 @@ LVM_input(){
 		clear 
 
 		echo lvs -a
-        cat $LPP/lvs | grep -E '^|\-M\-'  --color=auto
-
+		
+         cat $LPP/lvs | grep -E '^|\-M\-'  --color=auto
+        # cat $LPP/lvs | grep -E '^|Cwi'  --color=auto
+        o
 		press_enter 
 		LVM_information
 
@@ -3061,7 +3071,7 @@ printf "\n"
 echo What information do you need\?
 printf "\n"
 echo 1.   Basic information
-echo 2.   Volume infomation
+echo 2.   Volume information
 echo 3.   RAID information
 echo 4.   APP information
 echo 5.   Disk information
