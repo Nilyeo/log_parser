@@ -108,6 +108,9 @@
 # 2023-01-05
 # * update qcli_storage -d
 # * update md_checker
+# 2023-01-06
+# * Parse volume type using /lvm/backup
+# * update ifconfig parsing
 ######################################
 
 
@@ -361,7 +364,7 @@ source $LPP/ssdcache_cg_parameter
 
 
 ## Generate Network log
-cat $Path/Q*.html| sed -n '/sbin\/ifconfig/,$p' | sed -n '/IRQ\_INFO/q;p'| sed -n '/\=\ \[\ D/q;p' > $LPP/network
+cat $Path/Q*.html| sed -n '/sbin\/ifconfig/,$p' | sed -n '/IRQ\ INFO/q;p'| sed -n '/\=\ \[\ D/q;p' > $LPP/network
 
 
 
@@ -625,8 +628,9 @@ VolumeSSDMode="CG${!VolumeSSDNumber}_mode"
 
 echo Volume $i/$lp_VolumeNumber
 echo "Volume Name: ${!VolumeName}"
-echo "Volume Type: ${!VolumeType}"
+# echo "Volume Type: ${!VolumeType}"
 echo "Volume Threshold: ${!VolumeThreshod}%"
+cat $Path/etc/config/lvm/backup/* | grep -w lv$i -A 13 | grep type| cut -d "=" -f2|tr "\"" "\ " | awk '{if ($1=="thick") {print "Volume Type: Thick volume"} else if ($1=="thin") {print "Volume Type: Thin volume"}else if ($1=="striped") {print "Volume Type: Static volume"} }'
 
 case ${!VolumeStatus} in
 0)
@@ -1586,7 +1590,7 @@ Network_input()
         clear 
 
         echo ifconfig
-        cat $LPP/network | sed -n '/G\_TA/q;p' | grep -v ifconfig
+        cat $LPP/network | sed -n '/G\ TA/q;p' | grep -v ifconfig | grep -v ROUTING
 
 
         press_enter 
