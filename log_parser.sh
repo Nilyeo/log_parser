@@ -111,6 +111,8 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
+# * add system log parsing for network
+# * add smarturl link
 ######################################
 
 
@@ -1180,6 +1182,7 @@ Systemlog_questions(){
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
+        echo "   65. Network & Virtual Switch  "
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1348,6 +1351,17 @@ Systemlog_input(){
             
              ;;
 
+            65)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Net" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
 
 
@@ -1734,11 +1748,13 @@ myQNAPcloud_question(){
 
 echo QID: $lp_QID
 echo Device name: $lp_DEVICENAME
+
 echo Access Control: $lp_DEVICE_ACCESS_CONTROL_MODE
 echo "#####"
 grep DDNS -A 1 $Path/etc/config/qid.conf
 echo "#####"
 echo URL: $myQNAPCloudUrl
+echo Smarturl: https://qlink.to/$lp_DEVICENAME
 echo note: Install nmap using brew
  printf "\n"
   printf "\n"

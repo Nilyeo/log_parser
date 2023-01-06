@@ -10,11 +10,13 @@ sh log_parser.sh Q211I009382
 
 ### When you can use 
 
+
+
 Quickly navigate the following information
 
-1. Error \
+1. Error 
 
-   the apps provides a simple notification when an error is detected
+   The apps provides a simple notification when an error is detected
 
 2. Firmware version
 
