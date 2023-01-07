@@ -113,6 +113,7 @@
 # * update ifconfig parsing
 # * add system log parsing for network
 # * add smarturl link
+# * add function which can be used to check if there is duplicated lv 
 ######################################
 
 
@@ -330,7 +331,8 @@ cat $Path/etc/config/smb.conf | grep "\[" -A 23 |sed 's/ //g' |tr '\n' ' '|tr '\
 
 
 ## Generate LVS info
-cat $Path/Q*.html| grep lvs -A  50 | grep -e "VG" -e "vg1" -e "vg2" -e "vg3" -e "vg288" -e "vg289" | grep -v "VG Name" >$LPP/lvs
+cat $Path/Q*.html|sed -n '/lvs\ \-a/,$p'  | sed -n '/lvs\ \-a/,$p' | sed -n '/\-\-map/q;p'| grep -v "lvs -a\|WARN\|Found" > $LPP/lvs
+# cat $Path/Q*.html| grep lvs -A  50 | grep -e "VG" -e "vg1" -e "vg2" -e "vg3" -e "vg288" -e "vg289" | grep -v "VG Name" >$LPP/lvs
 cat $Path/logparser/lvs | grep -Eo "^\ \ lv[0-9]{1,3}\ "  > $LPP/lvsname
 
 
@@ -492,6 +494,7 @@ Volume_questions(){
         echo 3. file system
         echo 4. Volume.conf ifno
         echo 5. Advanced volume info
+        echo 6. Check lv is duplicated or covered by cache
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -722,6 +725,28 @@ done
 
 
         ;;
+
+
+        6)
+        clear
+
+
+cat $Path/etc/config/lvm/backup/vg* | grep "lv[1-9]\|vg" | grep "{" | grep -v "256\|lv54\|lv131" 
+printf "\n"
+printf "\n"
+echo "The following LVs are duplicated"
+cat $Path/etc/config/lvm/backup/vg* | grep "lv[1-9]" | grep "{" | grep -v "256\|lv54\|lv131" | sort | uniq -c | grep "\ \ [2-9]"
+printf "\n"
+printf "\n"
+
+    
+
+        press_enter 
+        Volume_information
+
+        
+        ;;
+
 
 
 
@@ -1183,6 +1208,8 @@ Systemlog_questions(){
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
         echo "   65. Network & Virtual Switch  "
+        echo "   66. myQNAPcloud  "
+        echo "   67. Firmware  "
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1362,6 +1389,31 @@ Systemlog_input(){
             Systemlog_information      
             
              ;;
+
+            66)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[myQ" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+             67)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Firm" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
 
 
 
@@ -2096,7 +2148,7 @@ LVM_input(){
 		
          cat $LPP/lvs | grep -E '^|\-M\-'  --color=auto
         # cat $LPP/lvs | grep -E '^|Cwi'  --color=auto
-        o
+        
 		press_enter 
 		LVM_information
 

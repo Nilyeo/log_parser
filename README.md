@@ -10,16 +10,42 @@ sh log_parser.sh Q211I009382
 
 ### When you can use 
 
-
-
 Quickly navigate the following information
 
-1. Error 
+* Error/Warning is detected
 
-   The apps provides a simple notification when an error is detected
+  The apps provides a notification when the following error/warning are found
 
-2. Firmware version
+  * Disk Warning/ Error
+  * ATA bus / IO / media  error in kernel log
+  * Fcorig warning
+  * Call Trace 
+  * PSTORE 
+  * Pool Error (-M-)
+  * Unknown device in PVS 
+  * Pool Read/Delete Status
 
-3. APP information 
+* Basic information
 
-   
+  * How long the log was collected
+  * Helpdesk app version
+
+  * Serial Number
+  * Firmware version
+  * myQNAPcloud URL
+  * Power on time (when the log was collected)
+
+* APP information
+
+  * Installed Apps
+
+* System log information
+
+  * Color the system log for different level
+  * Shorten the system log with essential info only
+  * Classify the system for different function
+  * Collect abnormal rebooting system log
+  * Collect firmware upgrading system log
+
+
+
