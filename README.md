@@ -29,7 +29,6 @@ Quickly navigate the following information
 
   * How long the log was collected
   * Helpdesk app version
-
   * Serial Number
   * Firmware version
   * myQNAPcloud URL
