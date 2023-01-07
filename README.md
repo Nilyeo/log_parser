@@ -24,44 +24,65 @@ Quickly navigate the following information
   * Pool Error (-M-)
   * Unknown device in PVS 
   * Pool Read/Delete Status
+  * WOL (eth0 missing)
 
 * Header provides the following information
 
-  * The information to know how long the log was collected
+  * The information to know
+    * How long the log was collected
+    * If the NAS is migrated.
   * Helpdesk app version
   * NAS model
   * Serial Number
   * Firmware version
   * myQNAPcloud URL 
   * Power on time when the log was collected
-  * The information to know if the NAS is migrated.
 
-* Basic information
+1. Basic information
+   * Server Name
+   * Web Management Port
+   * The information to know the following options are enabled or not.
+     * SSH, and use which port
+     * Telnet, and use which port
+     * 2-step-verification
+     * Connection log 
+     * Wake on LAN
+     * Disk Standby mode 
+     * Alarm Buzzer
+     * NTP server
+     * HTTPS
+2. APP information
+   * Installed Apps
+     * App name
+     * Author
+     * Enable
+     * Version
+     * Status
+     * Date
+3. Disk information
 
-  * Server Name
-  * Web Management Port
-  * The information to know 
-    * SSH is enabled or not, and use which port
-    * Telnet is enabled or not, and use which port
-    * 2-step-verification is enabled or not
-    * Connection log is enabled or not
-    * Wake on LAN is enabled or not
-    * Disk Standby mode is enabled or not
-    * Alarm is enabled or not
-    * NTP server is enabled or not
-    * SSL is enabled or not.
+   * qli_storage -d
+   * SMART information
+     * Disk model
+     * Read Speed
+     * SMART value
+   * Expansion cards or units
+4. Shared Folders information
+5. System log information
 
-* APP information
+   * Color the system log for different level
+   * Shorten the system log with essential info only
+   * Classify the system for different function
+   * Collect abnormal rebooting system log
+   * Collect firmware upgrading system log
+6. Kernel log information
+7. Network information
+   * ifconfig
+   * route
+   * outgoing log
+   * gateway policy
 
-  * Installed Apps
+8. Memory information
 
-* System log information
-
-  * Color the system log for different level
-  * Shorten the system log with essential info only
-  * Classify the system for different function
-  * Collect abnormal rebooting system log
-  * Collect firmware upgrading system log
-
-
+9. myQNAPcloud information
 
