@@ -25,14 +25,38 @@ Quickly navigate the following information
   * Unknown device in PVS 
   * Pool Read/Delete Status
 
+* Header provides the following information
+
+  * The information to know how long the log was collected
+
+  * Helpdesk app version
+
+  * NAS model
+
+  * Serial Number
+
+  * Firmware version
+
+  * myQNAPcloud URL 
+
+  * Power on time when the log was collected
+
+  * The information to know if the NAS is migrated.
+
 * Basic information
 
-  * How long the log was collected
-  * Helpdesk app version
-  * Serial Number
-  * Firmware version
-  * myQNAPcloud URL
-  * Power on time (when the log was collected)
+  * Server Name
+  * Web Management Port
+  * The information to know 
+    * SSH is enabled or not, and use which port
+    * Telnet is enabled or not, and use which port
+    * 2-step-verification is enabled or not
+    * Connection log is enabled or not
+    * Wake on LAN is enabled or not
+    * Disk Standby mode is enabled or not
+    * Alarm is enabled or not
+    * NTP server is enabled or not
+    * SSL is enabled or not.
 
 * APP information
 
