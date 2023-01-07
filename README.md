@@ -28,19 +28,12 @@ Quickly navigate the following information
 * Header provides the following information
 
   * The information to know how long the log was collected
-
   * Helpdesk app version
-
   * NAS model
-
   * Serial Number
-
   * Firmware version
-
   * myQNAPcloud URL 
-
   * Power on time when the log was collected
-
   * The information to know if the NAS is migrated.
 
 * Basic information
