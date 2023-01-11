@@ -1,6 +1,6 @@
 ## Log Parser
 
-a QNAP diagnostic log parser, tested on macOS 13.2 / GNU bash version 3.2.57 
+A QNAP diagnostic log parser, tested on macOS 13.2 / GNU bash version 3.2.57 
 
 ### Usage
 
@@ -8,7 +8,15 @@ sh log_parser.sh [folder_name_without space]  \
 for example:\
 sh log_parser.sh Q211I009382
 
-### When you can use 
+### Best Practice
+
+1. Collect QTS/QuTS hero firmware version in header, Input 4 > 1 to list installed APPs for submitting Mantis
+2. Input 7 > 6 to see the system log in short form and with color highlighted
+3. Input 7 > 1 and input the keyword to filter the system log.
+
+
+
+### Function overview
 
 Quickly navigate the following information
 
@@ -30,12 +38,11 @@ Quickly navigate the following information
 
   * The information to know
     * How long the log was collected
-    * If the NAS is migrated.
+    * If the NAS is migrated (if the source and destination model name is different)
   * Helpdesk app version
   * NAS model
-  * Serial Number
   * Firmware version
-  * myQNAPcloud URL 
+  * myQNAPcloud URL (if myQNAPcloud is configured)
   * Power on time when the log was collected
 
 1. Basic information
