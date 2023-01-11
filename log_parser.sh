@@ -111,6 +111,8 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
+<<<<<<< HEAD
+<<<<<<< HEAD
 # * add system log parsing for network
 # * add smarturl link
 # * add function which can be used to check if there is duplicated lv 
@@ -119,6 +121,10 @@
 # * Update the method to collect df and mount
 # 2023-01-10
 # * add system log parsing for network hardware
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 ######################################
 
 
@@ -1238,10 +1244,16 @@ Systemlog_questions(){
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
+<<<<<<< HEAD
+<<<<<<< HEAD
         echo "   65. Network & Virtual Switch  "
         echo "   66. myQNAPcloud  "
         echo "   67. Firmware  "
         echo "   68. Hardware Status (temperature..)  "
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1410,17 +1422,7 @@ Systemlog_input(){
             
              ;;
 
-            65)
-            clear
-
-
-            cat $LPP/systemlog  | grep "\[Net" | TinySys
-
-
-            press_enter 
-            Systemlog_information      
-            
-             ;;
+<<<<<<< HEAD
 
             66)
             clear
@@ -1433,6 +1435,8 @@ Systemlog_input(){
             Systemlog_information      
             
              ;;
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 
              67)
             clear
@@ -1844,13 +1848,11 @@ myQNAPcloud_question(){
 
 echo QID: $lp_QID
 echo Device name: $lp_DEVICENAME
-
 echo Access Control: $lp_DEVICE_ACCESS_CONTROL_MODE
 echo "#####"
 grep DDNS -A 1 $Path/etc/config/qid.conf
 echo "#####"
 echo URL: $myQNAPCloudUrl
-echo Smarturl: https://qlink.to/$lp_DEVICENAME
 echo note: Install nmap using brew
  printf "\n"
   printf "\n"

@@ -14,7 +14,9 @@ sh log_parser.sh Q211I009382
 2. Input 7 > 6 to see the system log in short form and with color highlighted
 3. Input 7 > 1 and input the keyword to filter the system log.
 
+<<<<<<< HEAD
 
+<<<<<<< HEAD
 
 ### Function overview
 
@@ -23,6 +25,20 @@ Quickly navigate the following information
 * Error/Warning is detected
 
   The apps provides a notification when the following error/warning are found
+=======
+Quickly navigate the following information
+=======
+Quickly navigate the following information
+
+1. Error \
+
+   the apps provides a simple notification when an error is detected
+>>>>>>> parent of b32b428 (logparser update and readme)
+
+1. Error \
+
+   the apps provides a simple notification when an error is detected
+>>>>>>> parent of b32b428 (logparser update and readme)
 
   * Disk Warning/ Error
   * ATA bus / IO / media  error in kernel log
