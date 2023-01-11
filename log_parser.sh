@@ -111,36 +111,9 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
-<<<<<<< HEAD
-# * add system log parsing for network
-# * add smarturl link
-# * add function which can be used to check if there is duplicated lv 
-# 2023-01-07
-# * Update for seach lv volumes 
-# * Update the method to collect df and mount
-# 2023-01-10
-# * add system log parsing for network hardware
-=======
->>>>>>> parent of b32b428 (logparser update and readme)
 ######################################
 
 
-runningonQNAPornot(){
-
-
-ls /etc/config 1>/dev/null 2>&1
-if [ $? -ne 0 ]
-then
-onQNAP=0
-  :
-  
-else
-alias sort='busybox sort'
-alias grep='busybox grep'
-onQNAP=1
-fi
-
-}
 
 
 
@@ -238,8 +211,7 @@ done
 
 
 ##generate df without mounted snapshots 
-# cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%"| grep -v snapshot > $LPP/df 
-cat $Path/Q*.html | sed -n '/df\<\/\b\>/,$p'  | sed -n '/\FO/q;p' | grep -v "</" > $LPP/df
+cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%"| grep -v snapshot > $LPP/df 
 ##generate datavolume
 cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%" |grep "DATA"| grep -v "DATA\/" | tr -s " " >$LPP/davo
 sed -e 's/\/dev\/mapper\/cachedev[0-9]//g' $LPP/davo |sed -e 's/\/dev\/md[0-9]//g' |tr -s " " >$LPP/davo2
@@ -309,8 +281,7 @@ progress_bar
 
 cat $Path/etc/config/raid.conf | grep "\[RA" -A 24 \
 | grep -e "\[RA" -e uuid  -e id -e partNo -e aggreMember -e readOnly -e legacy -e version2 -e overProvisioning -e devceName -e raidLevel -e internal -e mdBitmap -e chunkSize -e readAhead -e stripeCacheSize -e speedLimitMax -e speedLimitMin -e data -e dataBitmap -e srubStatus -e eventSkipped -e eventCompleted -e degradedCnt \
-sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 >$LPP/.raid.tmp
-## |sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/.raid.tmp
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/.raid.tmp
 
 
 
@@ -323,8 +294,7 @@ cat $Path/Q*.html | sed -n '/\#\ dmi/,$p' | sed -n '/\<a\ name\=\"\BLOCK/q;p' > 
 ## Volume information
 cat $Path/etc/config/qlvm.conf | grep "\[L" -A 16 \
 | grep -e "\[LV" -e lvId -e poolId -e flag -e threshold -e lvName -e uuid -e completeFsResize -e overThreshold -e lvSize -e memberBitmap -e member_0 -e volName \
-|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 >$LPP/qlvm
-## |sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qlvm
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qlvm
 
 awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13}' $LPP/qlvm | sed 's/ /\n/g' |sed '/LV[1-9][1-9]\_$/d' |sed '/LV[1-9]\_$/d'> $LPP/qlvm_parameter
 chmod 755 $LPP/qlvm_parameter
@@ -333,8 +303,7 @@ source $LPP/qlvm_parameter
 # parsing volume.conf
 cat $Path/etc/volume.conf | grep "\[V" -A 27 \
 | grep -e "\[VO" -e volID  -e volName -e raidID -e raidName -e ssdCache -e unclean -e filesystem -e mappingName -e readOnly -e writeCache -e invisible -e raidLevel -e status -e time -e baseId -e baseName -e inodeRatio -e volType \
-|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 >$LPP/qvolume
-## |sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qvolume
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qvolume
 
 # generate volume info
 awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13,$1"\_"$14,$1"\_"$15,$1"\_"$16,$1"\_"$17}' $LPP/qvolume | sed 's/ /\n/g' |sed '/VOL[1-9][1-9]\_$/d' |sed '/VOL[1-9]\_$/d'> $LPP/qvolume_parameter
@@ -359,8 +328,7 @@ cat $Path/etc/config/smb.conf | grep "\[" -A 23 |sed 's/ //g' |tr '\n' ' '|tr '\
 
 
 ## Generate LVS info
-cat $Path/Q*.html|sed -n '/lvs\ \-a/,$p'  | sed -n '/lvs\ \-a/,$p' | sed -n '/\-\-map/q;p'| grep -v "lvs -a\|WARN\|Found" > $LPP/lvs
-# cat $Path/Q*.html| grep lvs -A  50 | grep -e "VG" -e "vg1" -e "vg2" -e "vg3" -e "vg288" -e "vg289" | grep -v "VG Name" >$LPP/lvs
+cat $Path/Q*.html| grep lvs -A  50 | grep -e "VG" -e "vg1" -e "vg2" -e "vg3" -e "vg288" -e "vg289" | grep -v "VG Name" >$LPP/lvs
 cat $Path/logparser/lvs | grep -Eo "^\ \ lv[0-9]{1,3}\ "  > $LPP/lvsname
 
 
@@ -379,13 +347,11 @@ cat $Path/Q*.html| grep pvs -A 10 | grep -i vg > $LPP/pvs
 ## Generate SSD info
 cat $Path/etc/config/ssdcache.conf | grep "\[SSD" -A 10 \
 | grep -e "\[SSD" -e ssdCacheId -e ssdCacheName -e qdmId -e lvId -e groupId -e uuid -e flag -e enabled -e reserved -e sysCache \
-|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 >$LPP/ssdcache_cache
-## |sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cache
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cache
 
 cat $Path/etc/config/ssdcache.conf | grep "\[CG" -A 12 \
 | grep -e "\[CG" -e groupId -e groupName -e lvId -e mode -e replaceAlgorithm -e bypass_threshold -e flag -e enabled -e member_0 -e memberBitmap -e member_1 -e op_ratio \
-|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 >$LPP/ssdcache_cg
-## |sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cg
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cg
 
 awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13}' $LPP/ssdcache_cache \
 | sed 's/ /\n/g' | sort -u| sed '/SSDCache[0-9]\_$/d' | sed '/SSDCache[0-9][0-9]\_$/d' | sed '/SSDCache[0-9][0-9][0-9]\_$/d'> $LPP/ssdcache_cache_parameter
@@ -443,7 +409,7 @@ cat $Path/Q*.html| sed -n '/zfs\ get\ all\ \]\ /,$p' | sed -n '/history\ \-i/q;p
 
 
 cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
-grep -v "@snap\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
+grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
 cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
 }
 
@@ -524,7 +490,6 @@ Volume_questions(){
         echo 3. file system
         echo 4. Volume.conf ifno
         echo 5. Advanced volume info
-        echo 6. Check lv is duplicated or covered by cache
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -540,13 +505,12 @@ Volume_input(){
         1)
         clear 
 
-      #cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%" > $LPP/df  
-cat $LPP/df 
-# cat $LPP/df | grep -v DATA
+      #cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%" > $LPP/df    
+cat $LPP/df | grep -v DATA
 printf "\n"
 printf "\n"
 
-#cat $Path/Q*.html | grep "<b>mount" -A 40 | grep -w on | grep -v tmpfs
+cat $Path/Q*.html | grep "<b>mount" -A 40 | grep -w on | grep -v tmpfs
 
 #echo the following volume is full
 #cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "100%" 
@@ -636,10 +600,7 @@ clear
 
 lp_VolumeNumber=$(cat $LPP/qvolume_parameter | grep -i mappingName |wc -l)
 
-#for (( i=1; i<=$lp_VolumeNumber; i=i+1 ));
-#
-for i in $(cat $LPP//lvs |tr -s " "|awk '{print $1}' | grep -v "\[" | grep lv | sed 's/lv//'| sort -nu |tr "\n" " ")
-
+for (( i=1; i<=$lp_VolumeNumber; i=i+1 ));
 do 
 
 VolumeName="VOL${i}_volName"
@@ -759,28 +720,6 @@ done
 
 
         ;;
-
-
-        6)
-        clear
-
-
-cat $Path/etc/config/lvm/backup/vg* | grep "lv[1-9]\|vg" | grep "{" | grep -v "256\|lv54\|lv131" 
-printf "\n"
-printf "\n"
-echo "The following LVs are duplicated"
-cat $Path/etc/config/lvm/backup/vg* | grep "lv[1-9]" | grep "{" | grep -v "256\|lv54\|lv131" | sort | uniq -c | grep "\ \ [2-9]"
-printf "\n"
-printf "\n"
-
-    
-
-        press_enter 
-        Volume_information
-
-        
-        ;;
-
 
 
 
@@ -1241,13 +1180,6 @@ Systemlog_questions(){
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
-<<<<<<< HEAD
-        echo "   65. Network & Virtual Switch  "
-        echo "   66. myQNAPcloud  "
-        echo "   67. Firmware  "
-        echo "   68. Hardware Status (temperature..)  "
-=======
->>>>>>> parent of b32b428 (logparser update and readme)
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1416,45 +1348,6 @@ Systemlog_input(){
             
              ;;
 
-<<<<<<< HEAD
-
-            66)
-            clear
-
-
-            cat $LPP/systemlog  | grep "\[myQ" | TinySys
-
-
-            press_enter 
-            Systemlog_information      
-            
-             ;;
-
-             67)
-            clear
-
-
-            cat $LPP/systemlog  | grep "\[Firm" | TinySys
-
-
-            press_enter 
-            Systemlog_information      
-            
-             ;;
-
-             68)
-            clear
-
-
-            cat $LPP/systemlog  | grep "\[Hard" | TinySys
-
-
-            press_enter 
-            Systemlog_information      
-            
-             ;;
-=======
->>>>>>> parent of b32b428 (logparser update and readme)
 
 
 
@@ -2187,7 +2080,7 @@ LVM_input(){
 		
          cat $LPP/lvs | grep -E '^|\-M\-'  --color=auto
         # cat $LPP/lvs | grep -E '^|Cwi'  --color=auto
-        
+        o
 		press_enter 
 		LVM_information
 
@@ -3088,8 +2981,7 @@ else
 echo 
 fi
 
-runningonQNAPornot
-echo $onQNAP
+
 
 Generate_logs
 
