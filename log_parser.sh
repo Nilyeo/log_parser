@@ -111,6 +111,7 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
+<<<<<<< HEAD
 # * add system log parsing for network
 # * add smarturl link
 # * add function which can be used to check if there is duplicated lv 
@@ -119,6 +120,8 @@
 # * Update the method to collect df and mount
 # 2023-01-10
 # * add system log parsing for network hardware
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 ######################################
 
 
@@ -1238,10 +1241,13 @@ Systemlog_questions(){
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
+<<<<<<< HEAD
         echo "   65. Network & Virtual Switch  "
         echo "   66. myQNAPcloud  "
         echo "   67. Firmware  "
         echo "   68. Hardware Status (temperature..)  "
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1410,6 +1416,7 @@ Systemlog_input(){
             
              ;;
 
+<<<<<<< HEAD
 
             66)
             clear
@@ -1446,6 +1453,8 @@ Systemlog_input(){
             Systemlog_information      
             
              ;;
+=======
+>>>>>>> parent of b32b428 (logparser update and readme)
 
 
 

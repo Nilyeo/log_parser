@@ -10,6 +10,7 @@ sh log_parser.sh Q211I009382
 
 ### Best Practice
 
+<<<<<<< HEAD
 
 1. Collect QTS/QuTS hero firmware version in header, Input 4 > 1 to list installed APPs for submitting Mantis
 2. Input 7 > 6 to see the system log in short form and with color highlighted
@@ -22,6 +23,13 @@ Quickly navigate the following information
 
 * Error/Warning is detected
 
+=======
+Quickly navigate the following information
+
+1. Error \
+
+   the apps provides a simple notification when an error is detected
+>>>>>>> parent of b32b428 (logparser update and readme)
 
    the apps provides a simple notification when an error is detected
 
