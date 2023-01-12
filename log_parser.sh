@@ -3215,7 +3215,17 @@ echo 14. Process information
 echo 15. RansomwareCheck information
 echo 16. LVM information
 echo 17. ZFS information
-echo 18. Open files
+
+if [ $onQNAP -eq 0 ]; then
+
+
+  echo 18. Open files
+
+else 
+    :
+
+fi
+
 echo 19. helpdesk information
 echo 99. Test function
 
