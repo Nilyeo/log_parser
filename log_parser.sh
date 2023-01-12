@@ -111,6 +111,14 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
+# * add system log parsing for network
+# * add smarturl link
+# * add function which can be used to check if there is duplicated lv 
+# 2023-01-07
+# * Update for seach lv volumes 
+# * Update the method to collect df and mount
+# 2023-01-10
+# * add system log parsing for network hardware
 # 2023-01-11
 # * modifying the codes to apply on macOS and QTS. for example: alias
 # * found that sed using " " in macOS and using \s in QTS, need to update md_checker and qcli_storage.
@@ -1201,6 +1209,11 @@ Systemlog_questions(){
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
         echo "   64. Cache  "
+        echo "   65. Network & Virtual Switch  "
+        echo "   66. myQNAPcloud  "
+        echo "   67. Firmware  "
+        echo "   68. Hardware Status (temperature..)  "
+        echo "   69. App Center "
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1369,8 +1382,65 @@ Systemlog_input(){
             
              ;;
 
+            65)
+            clear
 
 
+            cat $LPP/systemlog  | grep "\[Net" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+            66)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[myQ" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+             67)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Firm" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+             68)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[Hard" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+            69)
+            clear
+
+
+            cat $LPP/systemlog  | grep "\[App" | TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
             7)
             clear
@@ -2986,7 +3056,13 @@ Mounted_DATA_checking(){
 #read Path
 Path="$1"
 
+#if [ $path -eq 1 ]; then
 
+
+#	echo yes ;
+
+
+# else 
 
 
 resize -s 32 112 1>/dev/null 2>&1
@@ -3005,6 +3081,8 @@ then
 else
 echo 
 fi
+
+# fi
 
 
 # if [ $onQNAP -eq 0 ]; then 
