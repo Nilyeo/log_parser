@@ -111,11 +111,31 @@
 # 2023-01-06
 # * Parse volume type using /lvm/backup
 # * update ifconfig parsing
+# 2023-01-11
+# * modifying the codes to apply on macOS and QTS. for example: alias
+# * found that sed using " " in macOS and using \s in QTS, need to update md_checker and qcli_storage.
 ######################################
 
 
 
+#runningonQNAPornot(){
 
+ls /etc/config 1>/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+
+
+onQNAP=0
+  :
+  
+else
+alias grep="busybox grep"
+alias sort="busybox sort"
+
+onQNAP=1
+fi
+
+#}
 
 
 press_enter(){
@@ -226,7 +246,7 @@ progress_bar
 
 ## generate qcli_storage -d
 
-cat $Path/Q*.html | sed -n '/ge\ \-d\ \<\/\b\>/,$p' | sed -n '/\[/q;p' | grep -v "</" > $LPP/qclistoraged
+cat $Path/Q*.html | sed -n '/sbin\/qcli/,$p' | sed -n '/\[/q;p' | grep -v "qcli_\|VOL" > $LPP/qclistoraged
 # cat $Path/Q*.html | grep "qcli_storage\ -d" -A 20 | grep -e "NAS_HOST" -e "Enclosure" > $LPP/qclistoraged
 ## Disk informaiton
 cat $Path/etc/enclosure_0.conf | grep model | sed -e 's/model\ \=\ //g' > $LPP/disks
@@ -249,7 +269,7 @@ progress_bar
 
 
 
-cat $Path/Q*.html |sed -n '/KER\"\>\<\/\a\>/,$p' | sed -n '/IFCONFIG/q;p'| grep -v "</"> $LPP/.md_checker_tmp
+cat $Path/Q*.html |sed -n '/Welcome\ t/,$p' |sed -n '/IFCONFIG/q;p'| grep -v "</"> $LPP/.md_checker_tmp
 head -n  $((`cat $LPP/.md_checker_tmp |wc -l`/2)) $LPP/.md_checker_tmp > $LPP/md_checker
 
 ## generate mdadm 
@@ -311,7 +331,7 @@ chmod 755 $LPP/qvolume_parameter
 source $LPP/qvolume_parameter
 
 ## generate file system block
-cat $Path/Q*.html | sed -n '/\<b\>\/sbin\/tune2fs/,$p' | sed -n '/\<a\ name\=\"\QCLI\_/q;p' > $LPP/filesystem
+cat $Path/Q*.html | sed -n '/sbin\/tune2fs/,$p' |  sed -n '/\<a\ name\=\"\QCLI\_/q;p' > $LPP/filesystem
 
 
 #generate volume number
@@ -411,6 +431,7 @@ cat $Path/Q*.html| sed -n '/zfs\ get\ all\ \]\ /,$p' | sed -n '/history\ \-i/q;p
 cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
 grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
 cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+
 }
 
 
@@ -2937,7 +2958,7 @@ Upgrade_Memory_checking(){
     RAMupgraded=$(cat $LPP/kernellog  |grep Memory:  | cut -d \( -f1 |cut -d \/ -f2 | sort -u |wc -l)
         #echo $RAMupgraded
 
-        if [$RAMupgraded = "1" ]; then
+        if [ $RAMupgraded -eq 1 ]; then
         :
         else
             printf "\e[0;31mRAM upgraded before(or NAS migrated before)\e[0m\n"
@@ -2964,6 +2985,10 @@ Mounted_DATA_checking(){
 #echo The folder path:
 #read Path
 Path="$1"
+
+
+
+
 resize -s 32 112 1>/dev/null 2>&1
 ls $Path/Q*.html 1>/dev/null 2>&1
 if [ $? -ne 0 ]
@@ -2982,8 +3007,16 @@ echo
 fi
 
 
+# if [ $onQNAP -eq 0 ]; then 
+# : 
+#elif [ $onQNAP -eq 1 ]; then 
+# :
+# fi
 
-Generate_logs
+
+  Generate_logs
+
+
 
 #time Generate_logs
 #press_enter
@@ -2994,7 +3027,20 @@ while true; do
 clear
 
 echo "########################################"
-echo READING: $Path `du -sh $Path | awk '{print " ","("$1")"}'`, $((($(date +%s) - $(stat -t %s -f %m -- $Path/Q*.html)) / 86400)) days old, $( cat $LPP/appinfo | grep -i helpdesk | awk '{print $1" "$4}')
+
+if [ $onQNAP -eq 0 ]; then 
+
+  echo READING: $Path `du -sh $Path | awk '{print " ","("$1")"}'`, $((($(date +%s) - $(stat -t %s -f %m -- $Path/Q*.html)) / 86400)) days old, $( cat $LPP/appinfo | grep -i helpdesk | awk '{print $1" "$4}')
+
+  
+elif [ $onQNAP -eq 1 ]; then 
+
+echo READING: $Path
+
+fi
+
+
+
 
 # cat $Path/Q*.html | grep -e "Model:" -e "Firmware:" -e "Date:"
 echo Date: $lp_Date
