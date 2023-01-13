@@ -122,6 +122,9 @@
 # 2023-01-11
 # * modifying the codes to apply on macOS and QTS. for example: alias
 # * found that sed using " " in macOS and using \s in QTS, need to update md_checker and qcli_storage.
+# 2023-01-12/13
+# * working on the script directly running on the NAS
+# * 
 ######################################
 
 
@@ -444,6 +447,300 @@ cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_para
 
 
 
+
+
+
+
+
+Generate_logs_on_NAS(){
+LPP=/dev/shm/logparser
+LP_QPKGCFG=/etc/config/qpkg.conf
+
+mkdir -p $LPP 
+
+## generate variables
+rm -f $LPP/.variables.tmp 
+echo \#\#\ basic_info |tee $LPP/.variables.tmp 1>/dev/null 2>&1
+lp_SerialNumber=$(get_hwsn)
+lp_Firmware=$(getcfg System Version -f /etc/config/uLinux.conf ;getcfg System "Build Number" -f /etc/config/uLinux.conf)
+lp_Model=`grep model /etc/config/netmgr.conf | cut -d = -f2`
+
+## Basic info from html
+# grep ^Date: $Path/Q*.html -A 13 | sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+echo \#\#\ basic_info_from uLinux.conf |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+## Basic info from uLlinux
+cat /etc/config/uLinux.conf \
+| grep -e "Web Access Port" -e "SSH Enable" -e "SSH Port" -e "TELNET Enable" -e "HomeLink" -e "ACL Enable" -e "Init ACL" \
+-e "2 step verification" -e "Auto PowerOn" -e "Write Connection Log" -e "Server Name" -e "Latest Check Live Update" \
+-e "Latest Live Update" -e "Enable NTP Server" -e "Disk StandBy Timeout Enable" -e "Disk StandBy Timeout"  \
+-e"Buzzer Warning Enable" -e "Wake On Lan" -e "TELNET Port" \
+| sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+
+## grep Stunnel from uLinux.conf
+#grep -i Stunnel -A 3 $Path/etc/config/uLinux.conf | tee -a $LPP/stunnel
+grep Stunnel -A 4 /etc/config/uLinux.conf | sed -n '/el\]/,$p' | grep -v Stun |sed -n '/\[/q;p' > $LPP/stunnel   ##beforeafter
+
+
+## myQNAPcloud info from qid.conf
+
+echo \#\#\ myQNAPcloud_info from qid.conf|tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+cat /etc/config/qid.conf |grep -e "DEVICE NAME" -e "QID" -e DEVICE_ACCESS_CONTROL_MODE | sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+
+## get platform from qpkg.conf
+echo \#\#\ planform from qpkg.conf|tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+cat /etc/config/qpkg.conf | grep platform | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+
+
+
+
+
+
+chmod 755 $LPP/.variables.tmp
+source $LPP/.variables.tmp
+
+
+
+
+
+## QTS or QuTS hero
+if grep -q "h" <<< "$lp_Firmware"; then
+    lp_ft="QuTS hero"
+else
+   lp_ft="QTS"
+fi
+
+
+progress="1/5, loading app information"
+progress_bar
+
+
+
+
+## generate App variables
+
+lp_AppNumber=$(cat $LP_QPKGCFG | grep -i display_name |wc -l)
+lp_AppName=(echo `cat $LP_QPKGCFG | grep -i display_name | sed 's/ //g' | sed 's/Display\_Name\=//g'`)
+lp_AppVersion=(echo `cat $LP_QPKGCFG | grep -w Version | sed 's/ //g' | sed 's/Version\=//g'`)
+lp_App_Author=(echo `cat $LP_QPKGCFG | grep -w Author | sed 's/ //g' | sed 's/Author\=//g'`)
+lp_App_Enable=(echo `cat $LP_QPKGCFG | grep -w Enable | sed 's/ //g' | sed 's/Enable\=//g'`)
+lp_App_Date=(echo `cat $LP_QPKGCFG | grep -w Date | sed 's/ //g' | sed 's/Date\=//g'`)
+lp_APP_Status=(echo `cat $LP_QPKGCFG | grep -w Status| sed 's/ //g' | sed 's/Status\=//g'`)
+
+## Generate App Info
+rm -f $LPP/appinfo
+for (( i=1; i<=$lp_AppNumber; i=i+1 ));
+do 
+echo ${lp_AppName[i]} ${lp_App_Author[i]} ${lp_App_Enable[i]} ${lp_AppVersion[i]} ${lp_APP_Status[i]} ${lp_App_Date[i]}     | tee -a $LPP/appinfo 1>/dev/null 2>&1
+
+done 
+
+
+##generate df without mounted snapshots 
+df > $LPP/df 
+##generate datavolume
+#cat $Path/Q*.html | grep "\=\ \[\ VOLUME\ IN" -A 30 | grep "%" |grep "DATA"| grep -v "DATA\/" | tr -s " " >$LPP/davo
+#sed -e 's/\/dev\/mapper\/cachedev[0-9]//g' $LPP/davo |sed -e 's/\/dev\/md[0-9]//g' |tr -s " " >$LPP/davo2
+
+
+
+progress="2/5 loading volume information"
+progress_bar
+
+
+
+
+## generate qcli_storage -d
+
+qcli_storage -d > $LPP/qclistoraged
+# cat $Path/Q*.html | grep "qcli_storage\ -d" -A 20 | grep -e "NAS_HOST" -e "Enclosure" > $LPP/qclistoraged
+## Disk informaiton
+cat /etc/enclosure_0.conf | grep model | sed -e 's/model\ \=\ //g' > $LPP/disks
+## generate disk variables
+lp_DiskNumber=$(cat /etc/enclosure_0.conf | grep -i model |wc -l)
+#lp_DiskName=(echo `cat $Path/etc/enclosure_0.conf | grep model | sed -e 's/model\ \=\ //g'`)
+lp_PortID=(echo `cat /etc/enclosure_0.conf | grep port_id |sed 's/ //g' | sed 's/port_id\=//g'`)
+lp_DiskName=(echo `cat /etc/enclosure_0.conf | grep model |sed 's/ //g' | sed 's/model\=//g'`)
+lp_SysName=(echo `cat /etc/enclosure_0.conf | grep pd_sys_name |sed 's/ //g' | sed 's/pd\_sys\_name\=//g'`)
+lp_ReadSpeed=(echo `cat /etc/enclosure_0.conf | grep read_speed |sed 's/ //g' | sed 's/read\_speed\=//g'`)
+
+
+
+progress="3/5 loading RAID inoformation"
+progress_bar
+
+
+## generate md_checker
+#cat $Path/Q*.html | grep "\=\ \[\ MD\ CH" -A 100 | grep -e "NAS_HOST" -e "Enclosure" -e Status -e Creation -e Version -e Chunk -e Name -e  Devi -e Leve -e UUID  -e Missing -e active -e "RAID\ m" -e ================= -C 1 > $LPP/.md_checker_tmp
+
+
+
+md_checker > $LPP/md_checker
+
+## generate mdadm 
+##cat $Path/Q*.html |  grep "ENCLOSURE_0 PORT" -A 28 > $LPP/.mdadmE_tmp
+#mdadm_line=$(grep -n "===" $LPP/.mdadmE_tmp | cut -d : -f 1 | tr "\n" " "|awk '{print $2}')-3
+
+## generate mdadm -E
+##     for (( i=1; i<=$lp_DiskNumber; i=i+1 ));
+## do 
+## cat  $LPP/.mdadmE_tmp | grep ${lp_SysName[i]} -A 28 |sed -n '/\=\=\=\=/q;p' > $LPP/mdadmE_${lp_PortID[i]}
+##  if grep -q "No md superblock detected" $LPP/mdadmE_${lp_PortID[i]}; then
+
+##            echo "No md superblock detected on ${lp_SysName[i]}" > $LPP/mdadmE_${lp_PortID[i]}
+##        else
+##           :
+##        fi
+##done
+
+
+
+progress="4/5 loading File system information "
+progress_bar
+
+
+
+## Generate RAID temp config
+#cat $Path/etc/config/raid.conf | grep "\[RA" -A 24 |sed 's/ //g' |tr '\n' ' '|sed 's/\_//g'|tr '\[' '\n'| sed 's/\]//g' | sed '1d' >$LPP/.raid.tmp
+
+
+cat /etc/config/raid.conf | grep "\[RA" -A 24 \
+| grep -e "\[RA" -e uuid  -e id -e partNo -e aggreMember -e readOnly -e legacy -e version2 -e overProvisioning -e devceName -e raidLevel -e internal -e mdBitmap -e chunkSize -e readAhead -e stripeCacheSize -e speedLimitMax -e speedLimitMin -e data -e dataBitmap -e srubStatus -e eventSkipped -e eventCompleted -e degradedCnt \
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/.raid.tmp
+
+
+
+## generate memory info
+#cat $Path/Q*.html | sed -n '/\#\ dmi/,$p' | sed -n '/\<a\ name\=\"\BLOCK/q;p' > $LPP/memoryinfo
+
+
+
+
+## Volume information
+cat /etc/config/qlvm.conf | grep "\[L" -A 16 \
+| grep -e "\[LV" -e lvId -e poolId -e flag -e threshold -e lvName -e uuid -e completeFsResize -e overThreshold -e lvSize -e memberBitmap -e member_0 -e volName \
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qlvm
+
+awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13}' $LPP/qlvm | sed 's/ /\n/g' |sed '/LV[1-9][1-9]\_$/d' |sed '/LV[1-9]\_$/d'> $LPP/qlvm_parameter
+chmod 755 $LPP/qlvm_parameter
+source $LPP/qlvm_parameter
+
+# parsing volume.conf
+cat /etc/volume.conf | grep "\[V" -A 27 \
+| grep -e "\[VO" -e volID  -e volName -e raidID -e raidName -e ssdCache -e unclean -e filesystem -e mappingName -e readOnly -e writeCache -e invisible -e raidLevel -e status -e time -e baseId -e baseName -e inodeRatio -e volType \
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | sed '1d' |sort -k1 -V >$LPP/qvolume
+
+# generate volume info
+awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13,$1"\_"$14,$1"\_"$15,$1"\_"$16,$1"\_"$17}' $LPP/qvolume | sed 's/ /\n/g' |sed '/VOL[1-9][1-9]\_$/d' |sed '/VOL[1-9]\_$/d'> $LPP/qvolume_parameter
+chmod 755 $LPP/qvolume_parameter
+source $LPP/qvolume_parameter
+
+## generate file system block
+#cat $Path/Q*.html | sed -n '/sbin\/tune2fs/,$p' |  sed -n '/\<a\ name\=\"\QCLI\_/q;p' > $LPP/filesystem
+
+
+#generate volume number
+#VolNumber=$(cat $LPP/filesystem | grep cachedev | wc -l)
+#VolName=(echo `cat $LPP/filesystem| grep -oE "cachedev[1-9]{1,2}" |sed 's/cachedev//'`)
+
+#echo $VolNumber
+#echo ${VolName[2]}
+
+ 
+
+## Generate Shared folder temp config
+cat /etc/config/smb.conf | grep "\[" -A 23 |sed 's/ //g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g' | grep -v global | grep -v printers | grep -v "\=Home">$LPP/.shared_folders.tmp
+
+
+## Generate LVS info
+lvs -a >$LPP/lvs
+cat $LPP/lvs | grep -Eo "^\ \ lv[0-9]{1,3}\ "  > $LPP/lvsname
+
+
+lvdisplay > $LPP/lvdisplay
+
+#cat $LPP/lvdisplay| grep "tp[0-9]_tmeta" -B 5 -A 6 | grep -e "LV Name" -e "Allocated pool" | sed 's/\ \ Allocated\ pool\ data/allocated/g' | sed 's/\ \ Allocated\ pool\ chunks/chunk/g'| tr -d ".,%,\r"|sed 's/\ \ LV\ Name/tpname/g' | tr -s " "| tr " " "=" > $LPP/tp_remainsize
+#chmod 755 $LPP/tp_remainsize
+#source $LPP/tp_remainsize
+
+## Generate PVS info
+pvs > $LPP/pvs
+
+
+
+
+## Generate SSD info
+cat /etc/config/ssdcache.conf | grep "\[SSD" -A 10 \
+| grep -e "\[SSD" -e ssdCacheId -e ssdCacheName -e qdmId -e lvId -e groupId -e uuid -e flag -e enabled -e reserved -e sysCache \
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cache
+
+cat /etc/config/ssdcache.conf | grep "\[CG" -A 12 \
+| grep -e "\[CG" -e groupId -e groupName -e lvId -e mode -e replaceAlgorithm -e bypass_threshold -e flag -e enabled -e member_0 -e memberBitmap -e member_1 -e op_ratio \
+|sed 's/ //g' |sed 's/\_//g' |tr '\n' ' '|tr '\[' '\n'| sed 's/\]//g'| sed '1d' |sort -k1 -V >$LPP/ssdcache_cg
+
+awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13}' $LPP/ssdcache_cache \
+| sed 's/ /\n/g' | sort -u| sed '/SSDCache[0-9]\_$/d' | sed '/SSDCache[0-9][0-9]\_$/d' | sed '/SSDCache[0-9][0-9][0-9]\_$/d'> $LPP/ssdcache_cache_parameter
+chmod 755 $LPP/ssdcache_cache_parameter
+source $LPP/ssdcache_cache_parameter
+
+awk '{print $1"\_"$2,$1"\_"$3,$1"\_"$4,$1"\_"$5,$1"\_"$6,$1"\_"$7,$1"\_"$8,$1"\_"$9,$1"\_"$10,$1"\_"$11,$1"\_"$12,$1"\_"$13}' $LPP/ssdcache_cg | sed 's/ /\n/g' | sed '/CG[0-9]\_$/d' > $LPP/ssdcache_cg_parameter
+chmod 755 $LPP/ssdcache_cg_parameter
+source $LPP/ssdcache_cg_parameter
+
+
+## Generate Network log
+ifconfig > $LPP/network
+
+
+
+## myqnapcloudurl
+myQNAPCloudUrl=$lp_DEVICENAME'.myqnapcloud.com'
+
+
+
+## System log
+log_tool -qv > $LPP/systemlog
+
+#cat $Path/Q*.html | grep ',20[0-9][0-9]-' > $LPP/systemlog
+
+## Generate Access log
+conn_log_tool -qv > $LPP/accesslog
+
+#cat $LPP/accesslog | awk -F "," '{print $1,$2,$3,$4,$5}'
+# cat $LPP/accesslog | awk -F, '{print $3" "$5" "$6" "$13" "$14" "}'
+
+## Kernel log
+/etc/init.d/klogd.sh dump >$LPP/kernellog
+
+
+
+##if migrated 
+modelhistory=(echo `cat $LPP/kernellog |grep -e "boot finished" -e Diag | sed -n 's/^.*\=\=/\=\=/p'| awk '{print $4}'  | sort -u `)
+
+
+## generate ps
+top -Q0 > $LPP/process
+
+## gernate special variables
+QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for example 5.0.1_0423 > 5.0.1
+
+## generate zfsgetall
+#cat $Path/Q*.html| grep -i "zfs get all" -A 1500 | grep zpool1 | grep -v "202*-" > $LPP/zfsgetall
+
+#zfs get all > $LPP/zfsgetall
+#cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
+#grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | \
+#sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+
+
+#cat $LPP/zfsgetall | grep -w "used\|usedbydataset\|usedbysnapshots\|refreservation\|qnap:zfs_volume_name\|refquota\|snap_refreservation\|qnap:pool_flag\|overwrite_reservation" | \
+#grep -v "@snapshot\|@:init\|RecentlySnapshot\|zpool[1-9]\ \|zpool256\ \|53[0-9]\/" | sed 's/zpool[1-9]\///' | sed 's/\:/_/' |sed 's/zfs//' | sort -nk1 > $LPP/zfs_info
+#cat $LPP/zfs_info | tr -s " " | awk '{print "ZFS"$1"_"$2"="$3}' > $LPP/qzfs_parameter
+#}h
+}
+
+
+
+
 #TinySys(){
 # awk -F "," '{print $3,$4,$8 }'
 #}
@@ -455,6 +752,10 @@ awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $3,$4,$8   } else if ($2==2){
 ColorSys(){
 awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $0   } else if ($2==2){print "\033[35m"e"\033[35m" $0} else if ($2==0){print "\033[39"n"\033[39m" $0}     }'; echo "\033[0m"
 }
+
+
+
+
 
 
 Basic_information(){
@@ -487,6 +788,9 @@ echo last time firmware live update: $lp_LatestLiveUpdate
 printf "\n"
 echo SSL info
 cat $LPP/stunnel
+
+printf "FAN and CPU/System temp"
+cat $Path/tmp/em/em_*
 
 
 #cat $Path/etc/config/uLinux.conf | grep "Stunnel" -A 2
@@ -3052,57 +3356,10 @@ Mounted_DATA_checking(){
 
 
 
-#echo The folder path:
-#read Path
-Path="$1"
-
-#if [ $path -eq 1 ]; then
-
-
-#	echo yes ;
-
-
-# else 
-
-
-resize -s 32 112 1>/dev/null 2>&1
-ls $Path/Q*.html 1>/dev/null 2>&1
-if [ $? -ne 0 ]
-then
-
-  echo Error: no Dianostic Log folder found
-  printf "\n"
-  echo Usage: sh log_parser.sh [folder_name_without space]
-  echo for example: 
-  echo sh log_parser.sh Q211I009382 
-  printf "\n"
-  exit
-  
-else
-echo 
-fi
-
-# fi
-
-
-# if [ $onQNAP -eq 0 ]; then 
-# : 
-#elif [ $onQNAP -eq 1 ]; then 
-# :
-# fi
-
-
-  Generate_logs
+Logparser_Header(){
 
 
 
-#time Generate_logs
-#press_enter
-
-clear
-
-while true; do
-clear
 
 echo "########################################"
 
@@ -3152,9 +3409,7 @@ fi
 #fi
 
 
-
 ## migrated if two models history in kernel log
-
 
 if [ -z "${modelhistory[2]}" ];then 
    :
@@ -3165,13 +3420,77 @@ fi
 
 
 
-
 echo `cat $LPP/kernellog | tail -n 1 | awk '{print $5}'| sed 's/\[//g'|cut -f1 -d"."`| awk '{printf "Power on time: %dD:%dH:%dM (%d) \n",$1/(60*60*24),$1%(60*60*24)/(60*60),$1/60%60,$1}'
 
 
-
-
 echo "########################################"
+
+
+    
+}
+
+
+
+
+#echo The folder path:
+#read Path
+Path="$1"
+
+if [ $Path = 1 ]; then
+
+
+	echo yes ;
+    sleep 5
+    Generate_logs_on_NAS
+
+ else 
+
+
+resize -s 32 112 1>/dev/null 2>&1
+ls $Path/Q*.html 1>/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+
+  echo Error: no Dianostic Log folder found
+  printf "\n"
+  echo Usage: sh log_parser.sh [folder_name_without space]
+  echo for example: 
+  echo sh log_parser.sh Q211I009382 
+  printf "\n"
+  exit
+  
+else
+Generate_logs 
+fi
+
+fi
+
+
+# if [ $onQNAP -eq 0 ]; then 
+# : 
+#elif [ $onQNAP -eq 1 ]; then 
+# :
+# fi
+
+
+  #Generate_logs
+  
+
+
+
+#time Generate_logs
+#press_enter
+
+clear
+
+while true; do
+clear
+
+
+
+Logparser_Header
+
+
 
 Disk_Warning_Abnormal_Checking
 Atabus_Error_Checking
