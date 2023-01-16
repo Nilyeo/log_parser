@@ -3434,18 +3434,20 @@ echo "########################################"
 
 #echo The folder path:
 #read Path
-Path="$1"
+#Path="$1"
+Input="$1"
 
-if [ $Path = 1 ]; then
+if [ $Input = 1 ]; then
 
 
 	echo yes ;
-    sleep 5
+    $Path=" "
+    sleep 1
     Generate_logs_on_NAS
 
  else 
 
-
+Path=$Input
 resize -s 32 112 1>/dev/null 2>&1
 ls $Path/Q*.html 1>/dev/null 2>&1
 if [ $? -ne 0 ]
