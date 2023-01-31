@@ -1548,7 +1548,7 @@ Shared_folders_information(){
     cat $Path/etc/config/smb.conf | grep -e protocol
     printf "\n"
     echo NAS is joined Domain or not and ABSE setting
-	cat $Path/etc/config/smb.conf | grep -e "passdb" -e "server signing" -e "restrict a" -e "guest ok" -e "map to guest"
+	cat $Path/etc/config/smb.conf | grep -e "realm\|password\ server\|idmap" -e "server signing" -e "restrict a" -e "guest ok" -e "map to guest"
     echo Restrict Anonymous 0 means disabled
 	printf "\n"
 	#cat $Path/etc/config/smb.conf | grep -e '\[' -e Enable -e path | grep -v "\[g"
@@ -1642,7 +1642,7 @@ Systemlog_input(){
 			clear
 
 
-            cat $LPP/systemlog  |grep from | grep -i firmware
+            cat $LPP/systemlog  |grep from | grep -i firmware | TinySys
 
 
             press_enter 
@@ -1653,7 +1653,7 @@ Systemlog_input(){
 			clear
 
 
-            cat $LPP/systemlog  | grep -i -e "not shut down" -e "not shutdown"
+            cat $LPP/systemlog  | grep -i -e "not shut down" -e "not shutdown" | TinySys
 
             press_enter 
             Systemlog_information       
