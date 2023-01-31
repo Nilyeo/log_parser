@@ -1,4 +1,4 @@
-# curl -L https://www.dropbox.com/s/co56ijttb88rqdh/log_parser.sh -o log_parser.sh
+# curl -L https://www.dropbox.com/s/6z27rl9d2dtwe0l/log_parser.sh -o log_parser.sh
 # Usage: sh log_parser.sh [folder_name]
 # for example: 
 # sh log_parser.sh Q211I009382
@@ -124,7 +124,13 @@
 # * found that sed using " " in macOS and using \s in QTS, need to update md_checker and qcli_storage.
 # 2023-01-12/13
 # * working on the script directly running on the NAS
-# * 
+# 2023-01-16
+# * add function to determine hardware platform for downloading the latest app
+# * to list the disks installed on the NAS recording in kernel log
+# * add color to kernel log
+# 2023-01-17
+# * check external drive model
+# * to do: migrated but on QTS 4
 ######################################
 
 
@@ -193,8 +199,8 @@ echo \#\#\ myQNAPcloud_info from qid.conf|tee -a $LPP/.variables.tmp 1>/dev/null
 cat $Path/etc/config/qid.conf |grep -e "DEVICE NAME" -e "QID" -e DEVICE_ACCESS_CONTROL_MODE | sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
 
 ## get platform from qpkg.conf
-echo \#\#\ planform from qpkg.conf|tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
-cat $Path/etc/config/qpkg.conf | grep platform | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+#echo \#\#\ planform from qpkg.conf|tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
+#cat $Path/etc/config/qpkg.conf | grep platform | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
 
 
 
@@ -753,6 +759,17 @@ ColorSys(){
 awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $0   } else if ($2==2){print "\033[35m"e"\033[35m" $0} else if ($2==0){print "\033[39"n"\033[39m" $0}     }'; echo "\033[0m"
 }
 
+ColorKer(){
+    awk '{ if ($4=="<5>"){print "\033[33m"w"\033[33m" $0   } \
+else if ($4=="<6>"){print "\033[35m"e"\033[35m" $0} \
+else if ($4=="<4>"){print "\033[39"n"\033[39m" $0} \
+else if ($4=="<7>"){print "\033[39"n"\033[39m" $0} \
+else if ($4=="<0>"){print "\033[39"n"\033[39m" $0} \
+else if ($4=="<1>"){print "\033[39"n"\033[39m" $0} \
+else if ($4=="<2>"){print "\033[39"n"\033[39m" $0} \
+else if ($4=="<3>"){print "\033[39"n"\033[39m" $0}     }'; echo "\033[0m"
+}
+
 
 
 
@@ -1090,6 +1107,7 @@ RAID_questions(){
         echo 4. mdadm \-E
         echo 5. kernel log message regarding ATA DRBD MD DEVICE-MAPPER CACHE
         echo 6. System log message regarding RAID
+        echo 7. Combing system log and kernel log
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -1185,7 +1203,17 @@ RAID_input(){
         RAID_information
         ;;
 
+        7)
+        clear
 
+        echo RAID
+        cat $LPP/kernellog | grep -i "device-mapper\|md\|drbd\|ext\|cache\|ata" > $LPP/kernellog_RAID
+        cat $LPP/systemlog | TinySys > $LPP/systemlog_RAID
+        cat $LPP/kernellog_RAID $LPP/systemlog_RAID | sort
+
+        press_enter 
+        RAID_information
+        ;;
 
 
 
@@ -1277,6 +1305,23 @@ APP_input(){
 
         echo 2
 
+
+        case "$(cat $Path/etc/config/lvm/backup/vg1 | grep "creation_host" | grep Linux | awk '{print $NF}')" in
+    *x86_64*)
+        lp_platform=x86_64
+        ;;
+    *aarch64*)
+        lp_platform=arm_64
+        ;;
+    *armv7l*)
+        lp_platform=arm-x41
+        ;;
+        *)
+        echo "Not supported"
+        exit 1
+        ;;
+esac
+
         echo $lp_platform
         echo $QTSv_shortform
         echo https://download.qnap.com/Liveupdate/QTS$QTSv_shortform/qpkgcenter_eng.xml
@@ -1328,6 +1373,7 @@ Disk_question(){
         echo 2. SMART_info
         echo 3. ATA bus error/Media error/IO error
         echo 4. Expansion cards or units
+        echo 5. Used disks in kernel log
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -1452,6 +1498,27 @@ else
         Disk_information
         ;;
 
+            5)
+        clear
+
+              echo installed HDD/SSD
+
+              cat $LPP/kernellog | grep "UDMA" | grep "ATA\-" | awk -F"," '{print $1}' | cut -d : -f6 | sort -u  
+              #cat $LPP/kernellog |grep "UDMA" | grep "ATA\-"
+              echo 
+
+             echo installed NVME
+                cat $LPP/kernellog | grep MN | awk -F"," '{print $1}' | cut -d = -f2 | sort -u
+                echo 
+
+
+            echo external HDD    
+                cat $LPP/kernellog| grep -i "usb-storage" -A 2 | grep Direct | grep -v MODULE |awk '{print $10" "$11}'| sort -u
+
+
+        press_enter
+        Disk_information
+        ;;
 
 
 
@@ -1653,7 +1720,7 @@ Systemlog_input(){
             clear
 
 
-            cat $LPP/systemlog  | grep "\[Sto" | TinySys
+            cat $LPP/systemlog  | grep "\[Sto\|Poo" | TinySys
 
 
             press_enter 
@@ -1678,7 +1745,7 @@ Systemlog_input(){
             clear
 
 
-            cat $LPP/systemlog  | grep "\[Sto" | grep cache| TinySys
+            cat $LPP/systemlog  | grep "\[Sto\|cache\|Hard\|SSD\|Poo" | TinySys
 
 
             press_enter 
@@ -1857,7 +1924,7 @@ Kernellog_input(){
 
 		clear
 
-            cat $LPP/kernellog
+            cat $LPP/kernellog | ColorKer
 
         press_enter
         kernellog_information
@@ -1867,7 +1934,7 @@ Kernellog_input(){
 		clear
 
 
-            cat $LPP/kernellog |grep -e "ATA bus error" -e "media error" -e "I/O error" --color=auto
+            cat $LPP/kernellog |grep -e "ATA bus error" -e "media error" -e "I/O error" -e "medium error" --color=auto
 
         press_enter
         kernellog_information
