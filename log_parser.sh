@@ -131,6 +131,14 @@
 # 2023-01-17
 # * check external drive model
 # * to do: migrated but on QTS 4
+# 2023-01-31
+# * add functino to chekc if the NAS is joined te domain
+# * add tinysys to other system log options
+# 2023-02-04
+# * add WWN to disk smart
+# * add export LC_CTYPE=C export LANG=C for fixng "sed: RE error: illegal byte sequence" error
+# 2023-02-07
+# * add command to check expansion unit SN
 ######################################
 
 
@@ -274,7 +282,7 @@ lp_PortID=(echo `cat $Path/etc/enclosure_0.conf | grep port_id |sed 's/ //g' | s
 lp_DiskName=(echo `cat $Path/etc/enclosure_0.conf | grep model |sed 's/ //g' | sed 's/model\=//g'`)
 lp_SysName=(echo `cat $Path/etc/enclosure_0.conf | grep pd_sys_name |sed 's/ //g' | sed 's/pd\_sys\_name\=//g'`)
 lp_ReadSpeed=(echo `cat $Path/etc/enclosure_0.conf | grep read_speed |sed 's/ //g' | sed 's/read\_speed\=//g'`)
-
+lp_WWN=(echo `cat $Path/etc/enclosure_0.conf | grep -w wwn |sed 's/ //g' | sed 's/wwn\=//g'`)
 
 
 progress="3/5 loading RAID inoformation"
@@ -568,6 +576,7 @@ lp_PortID=(echo `cat /etc/enclosure_0.conf | grep port_id |sed 's/ //g' | sed 's
 lp_DiskName=(echo `cat /etc/enclosure_0.conf | grep model |sed 's/ //g' | sed 's/model\=//g'`)
 lp_SysName=(echo `cat /etc/enclosure_0.conf | grep pd_sys_name |sed 's/ //g' | sed 's/pd\_sys\_name\=//g'`)
 lp_ReadSpeed=(echo `cat /etc/enclosure_0.conf | grep read_speed |sed 's/ //g' | sed 's/read\_speed\=//g'`)
+lp_WWN=(echo `cat /etc/enclosure_0.conf | grep -w wwn |sed 's/ //g' | sed 's/wwn\=//g'`)
 
 
 
@@ -1452,6 +1461,7 @@ do
 clear
 echo "######"
 echo Disk model: ${lp_DiskName[i]}
+echo Disk WWN: ${lp_WWN[i]}
 echo System Name: ${lp_SysName[i]}
 echo Read Speed: ${lp_ReadSpeed[i]}
 cat $Path/tmp/smart/smart_0_${lp_PortID[i]}.info | sed 's/ /\_/g' |sed 's/,/ /g' | grep Power-On_Hours |awk '{printf "Power on time: %dY:%dM:%dD RAW (%d) \n",$6/(24*30*12),$6%(24*30*12)/(24*30),$6%(30*24)/24,$6}'
@@ -1493,6 +1503,10 @@ else
 
 
               cat $Path/Q*.html| grep "= \[ hal_app --se_enum " -A 50| grep QNAP | grep -v BOOT | grep -v USB 
+               printf "\n"
+                printf "\n"
+                echo Serial number:
+              cat $Path/etc/hal.conf | grep -w "serial" -A2
 
         press_enter
         Disk_information
@@ -1883,6 +1897,7 @@ Kernellog_questions(){
         echo 5. dmesg before shut down
         echo 6. Call trace date
         echo 7. Cat PSTORE files
+        echo 8. SWAP Memory Status [OOM]
         printf "\n"
         echo or use the command: 
         echo cat $LPP\/kernellog \| grep your_keyword
@@ -1976,6 +1991,15 @@ Kernellog_input(){
         clear
 
             cat $Path/sys/fs/pstore/con*
+
+        press_enter
+        kernellog_information
+        ;;
+
+        8)
+        clear
+
+            cat $LPP/kernellog | grep "Swap:\|imk\|swap\ on"
 
         press_enter
         kernellog_information
@@ -3513,6 +3537,9 @@ if [ $Input = 1 ]; then
     Generate_logs_on_NAS
 
  else 
+
+export LC_CTYPE=C 
+export LANG=C
 
 Path=$Input
 resize -s 32 112 1>/dev/null 2>&1
