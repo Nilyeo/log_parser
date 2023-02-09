@@ -1599,6 +1599,7 @@ Systemlog_questions(){
         echo "   67. Firmware  "
         echo "   68. Hardware Status (temperature..)  "
         echo "   69. App Center "
+        echo "   70. Manually Rebooting and Shutdown history"
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1826,6 +1827,20 @@ Systemlog_input(){
             Systemlog_information      
             
              ;;
+
+            70)
+            clear
+
+            cat $LPP/systemlog  | grep -i power |  TinySys| grep -i "Restarting\|Shutting" -A 4 -B 5  --color=auto 
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+
 
             7)
             clear
@@ -2566,7 +2581,7 @@ LVM_input(){
 		
          cat $LPP/lvs | grep -E '^|\-M\-'  --color=auto
         # cat $LPP/lvs | grep -E '^|Cwi'  --color=auto
-        o
+        
 		press_enter 
 		LVM_information
 
