@@ -1600,6 +1600,7 @@ Systemlog_questions(){
         echo "   68. Hardware Status (temperature..)  "
         echo "   69. App Center "
         echo "   70. Manually Rebooting and Shutdown history"
+        echo "   71. Malware Remover"
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1839,6 +1840,17 @@ Systemlog_input(){
             
              ;;
 
+
+            71)
+            clear
+
+            cat $LPP/systemlog  | grep "\[Mal" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
 
 
