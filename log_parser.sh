@@ -139,6 +139,10 @@
 # * add export LC_CTYPE=C export LANG=C for fixng "sed: RE error: illegal byte sequence" error
 # 2023-02-07
 # * add command to check expansion unit SN
+# 2023-02-18
+# * cat nm.conf
+# 2023-02-21
+# * update the method to fetch systemlog and kernellog for helpdesk 3.2.0
 ######################################
 
 
@@ -419,7 +423,23 @@ myQNAPCloudUrl=$lp_DEVICENAME'.myqnapcloud.com'
 
 
 ## System log
+
+
+ls $Path/tmp/log_tool 1>/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+
+ 
 cat $Path/Q*.html|sed -n '/\-qv/,$p' | sed -n '/Done/q;p' > $LPP/systemlog
+  
+else
+cp $Path/tmp/log_tool  $LPP/systemlog
+fi
+
+
+
+
+
 
 #cat $Path/Q*.html | grep ',20[0-9][0-9]-' > $LPP/systemlog
 
@@ -430,7 +450,22 @@ cat $Path/Q*.html| sed -n '/\-\-gpdr/,$p' | sed -n '/Done/q;p'| sed -n '/\=\ \[\
 # cat $LPP/accesslog | awk -F, '{print $3" "$5" "$6" "$13" "$14" "}'
 
 ## Kernel log
+
+
+ls $Path/tmp/klogd_dump.log 1>/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+
+ 
 cat $Path/Q*.html | grep -e '<[0-9]>' -e "\[Diagnostic" >$LPP/kernellog
+  
+else
+cp $Path/tmp/klogd_dump.log  $LPP/kernellog
+fi
+
+
+
+
 
 
 
@@ -2077,6 +2112,7 @@ Network_questions()
         echo 3. outgoing log
         echo 4. gateway policy
         echo 5. devices used to connect to the NAS
+        echo 6. read nm.conf
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -2175,6 +2211,16 @@ cat $LPP/accesslog|  sed 's/ML,\ /ML\ /' |awk -F, '{print $6,$14}'|  grep -v "\-
         ;;
 
 
+
+6)
+        clear
+
+       cat $Path/etc/config/nm.conf
+
+
+        press_enter 
+       Network_information
+        ;;
 
 
 
