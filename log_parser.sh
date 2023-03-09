@@ -143,6 +143,11 @@
 # * cat nm.conf
 # 2023-02-21
 # * update the method to fetch systemlog and kernellog for helpdesk 3.2.0
+# 2023-02-23
+# * add iSCSI information
+# 2023-03-09
+# * fix the method to check if NTP time is configured.  
+# * add bad block check to storage system log
 ######################################
 
 
@@ -196,7 +201,7 @@ echo \#\#\ basic_info_from uLinux.conf |tee -a $LPP/.variables.tmp 1>/dev/null 2
 cat $Path/etc/config/uLinux.conf \
 | grep -e "Web Access Port" -e "SSH Enable" -e "SSH Port" -e "TELNET Enable" -e "HomeLink" -e "ACL Enable" -e "Init ACL" \
 -e "2 step verification" -e "Auto PowerOn" -e "Write Connection Log" -e "Server Name" -e "Latest Check Live Update" \
--e "Latest Live Update" -e "Enable NTP Server" -e "Disk StandBy Timeout Enable" -e "Disk StandBy Timeout"  \
+-e "Latest Live Update" -e "USE NTP Server" -e "Disk StandBy Timeout Enable" -e "Disk StandBy Timeout"  \
 -e"Buzzer Warning Enable" -e "Wake On Lan" -e "TELNET Port" \
 | sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
 
@@ -521,7 +526,7 @@ echo \#\#\ basic_info_from uLinux.conf |tee -a $LPP/.variables.tmp 1>/dev/null 2
 cat /etc/config/uLinux.conf \
 | grep -e "Web Access Port" -e "SSH Enable" -e "SSH Port" -e "TELNET Enable" -e "HomeLink" -e "ACL Enable" -e "Init ACL" \
 -e "2 step verification" -e "Auto PowerOn" -e "Write Connection Log" -e "Server Name" -e "Latest Check Live Update" \
--e "Latest Live Update" -e "Enable NTP Server" -e "Disk StandBy Timeout Enable" -e "Disk StandBy Timeout"  \
+-e "Latest Live Update" -e "USE NTP Server" -e "Disk StandBy Timeout Enable" -e "Disk StandBy Timeout"  \
 -e"Buzzer Warning Enable" -e "Wake On Lan" -e "TELNET Port" \
 | sed 's/:\ /=/g'  | sed 's/ //g' | sed -e 's/^/lp_/' |tee -a $LPP/.variables.tmp 1>/dev/null 2>&1
 
@@ -842,7 +847,7 @@ echo enabling Wake on LAN: $lp_WakeOnLan
 echo enabling Disk Standby mode: $lp_DiskStandByTimeoutEnable
 echo enabling Buzzer: $lp_BuzzerWarningEnable
 
-echo enabling NTP server: $lp_EnableNTPServer
+echo Using NTP server: $lp_USENTPServer
 echo last time check firmware live update: $lp_LatestCheckLiveUpdate
 echo last time firmware live update: $lp_LatestLiveUpdate
 
@@ -1771,7 +1776,7 @@ Systemlog_input(){
             clear
 
 
-            cat $LPP/systemlog  | grep "\[Sto\|Poo" | TinySys
+            cat $LPP/systemlog  | grep "\[Sto\|Poo\|Bad" | TinySys
 
 
             press_enter 
@@ -3109,6 +3114,76 @@ esac
 
 
 
+iSCSI_information(){
+
+
+iSCSI_questions
+iSCSI_input
+
+
+}
+
+
+iSCSI_questions(){
+
+#        
+        echo question:
+        echo 1. cat iscsi_trgt.conf
+        #echo 2. Display helpdesk log
+        printf "\n"
+        printf "\n"
+        echo q. Leave
+        printf "\n"
+        echo Input Number:
+
+        read TSANS
+
+
+}
+iSCSI_input(){
+
+
+
+    case $TSANS in
+        1)
+        clear 
+
+
+        cat $Path/etc/config/iscsi_trgt.conf
+
+
+        
+
+
+        press_enter 
+        helpdesk_information
+
+        ;;
+        2)
+        clear
+
+        cat $Path/mnt/ext/opt/qdesk/www/data/log/log*
+
+        echo testoutput
+
+
+
+        press_enter      
+        helpdesk_information
+        ;;
+        q)
+        ;;
+
+
+         *)
+        echo "Not supported"
+        
+        ;;
+esac
+
+
+}
+
 
 
 
@@ -3704,6 +3779,7 @@ echo 15. RansomwareCheck information
 echo 16. LVM information
 echo 17. ZFS information
 
+
 if [ $onQNAP -eq 0 ]; then
 
 
@@ -3715,6 +3791,7 @@ else
 fi
 
 echo 19. helpdesk information
+echo 20. iSCSI information
 echo 99. Test function
 
 printf "\n"
@@ -3917,6 +3994,21 @@ case $ANS in
      ;;  
 
 
+
+
+
+         20)
+
+
+        clear
+
+       
+
+        
+        iSCSI_information
+
+        press_enter
+     ;;  
 
 
 
