@@ -148,6 +148,25 @@
 # 2023-03-09
 # * fix the method to check if NTP time is configured.  
 # * add bad block check to storage system log
+# 2023-03-21
+# * add sort crontab
+# 2023-04-17
+# * add system log, QVPN 
+# 2023-04-20
+# * add install path in app information
+# 2023-04-20
+# * add system log, Domain Security
+# 2023-05-18
+# * add myqnapcloud link log
+# 2023-05-24
+# * cat eagnet info, not sure the usage for now.
+# * cat porter log
+# * cat qid log
+# 2023-05-25
+# * add shortcut s to system log
+# * add shortcut k to system log
+# * add segfault counts
+# * orgnize Basic information
 ######################################
 
 
@@ -254,12 +273,13 @@ lp_App_Author=(echo `cat $LP_QPKGCFG | grep -w Author | sed 's/ //g' | sed 's/Au
 lp_App_Enable=(echo `cat $LP_QPKGCFG | grep -w Enable | sed 's/ //g' | sed 's/Enable\=//g'`)
 lp_App_Date=(echo `cat $LP_QPKGCFG | grep -w Date | sed 's/ //g' | sed 's/Date\=//g'`)
 lp_APP_Status=(echo `cat $LP_QPKGCFG | grep -w Status| sed 's/ //g' | sed 's/Status\=//g'`)
+lp_APP_InstallPath=(echo `cat $LP_QPKGCFG | grep -w Install_Path| sed 's/ //g' | sed 's/Install_Path\=//g'`)
 
 ## Generate App Info
 rm -f $LPP/appinfo
 for (( i=1; i<=$lp_AppNumber; i=i+1 ));
 do 
-echo ${lp_AppName[i]} ${lp_App_Author[i]} ${lp_App_Enable[i]} ${lp_AppVersion[i]} ${lp_APP_Status[i]} ${lp_App_Date[i]}     | tee -a $LPP/appinfo 1>/dev/null 2>&1
+echo ${lp_AppName[i]} ${lp_App_Author[i]} ${lp_App_Enable[i]} ${lp_AppVersion[i]} ${lp_APP_Status[i]} ${lp_App_Date[i]}  ${lp_APP_InstallPath[i]}   | tee -a $LPP/appinfo 1>/dev/null 2>&1
 
 done 
 
@@ -800,8 +820,12 @@ QTSv_shortform=(`echo $lp_Firmware |cut -d "_" -f 1`)  ## shot QTS version, for 
 # awk -F "," '{print $3,$4,$8 }'
 #}
 
+#TinySys(){
+#awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $3,$4,$8   } else if ($2==2){print "\033[35m"e"\033[35m" $3,$4,$8} else if ($2==0){print "\033[39"n"\033[39m" $3,$4,$8}     }'; echo "\033[0m"
+#}
+
 TinySys(){
-awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $3,$4,$8   } else if ($2==2){print "\033[35m"e"\033[35m" $3,$4,$8} else if ($2==0){print "\033[39"n"\033[39m" $3,$4,$8}     }'; echo "\033[0m"
+sed 's/C\,\ /C\ /g' |awk -F\, '{ if ($2==1){print "\033[33m"w"\033[33m" $3,$4,$8   } else if ($2==2){print "\033[35m"e"\033[35m" $3,$4,$8} else if ($2==0){print "\033[39"n"\033[39m" $3,$4,$8}     }'; echo "\033[0m"
 }
 
 ColorSys(){
@@ -822,11 +846,18 @@ else if ($4=="<3>"){print "\033[39"n"\033[39m" $0}     }'; echo "\033[0m"
 
 
 
-
-
 Basic_information(){
- #cat $Path/Q*.html | grep -e "Serial Number:\ Q" -e "MAC:" -e "Firmware:" -e "Model:" | grep -v eth | grep -v PHY
- #cat $Path/etc/config/uLinux.conf | grep -e "Web Access Port" -e "SSH Enable" -e "SSH Port" -e "TELNET Enable" -e "HomeLink" -e "ACL Enable" -e "Init ACL"
+
+
+Basic_questions
+Basic_input
+
+
+}
+
+
+
+Basic_questions(){
 
 echo Serial number: $lp_SerialNumber
 echo Date: $lp_Date
@@ -854,20 +885,111 @@ echo last time firmware live update: $lp_LatestLiveUpdate
 printf "\n"
 echo SSL info
 cat $LPP/stunnel
+printf "\n"
 
-printf "FAN and CPU/System temp"
-cat $Path/tmp/em/em_*
+
+        echo question:
+        echo 1. Hardware info
+        echo 2. Crontab
+        printf "\n"
+        printf "\n"
+        echo q. Leave
+        printf "\n"
+        echo Input Number:
+
+        read BSANS
+
+
+}
+Basic_input(){
+
+
+
+    case $BSANS in
+        1)
+        clear 
+
+       printf "FAN and CPU/System temp at $lp_Date"
+       cat $Path/tmp/em/em_*
+
+
+        press_enter 
+        Basic_information
+
+        ;;
+        2)
+        clear
+
+
+echo sorted crontab
+cat $Path/etc/config/crontab| grep -E '^@|^\*|^[0-9]' | sort -n -k2 -k1
+
+        
+
+
+
+        press_enter 
+        Basic_information
+        ;;
+        q)
+        ;;
+
+
+         *)
+        echo "Not supported"
+        
+        ;;
+esac
+
+
+
+}
+
+
+
+#Basic_information(){
+ #cat $Path/Q*.html | grep -e "Serial Number:\ Q" -e "MAC:" -e "Firmware:" -e "Model:" | grep -v eth | grep -v PHY
+ #cat $Path/etc/config/uLinux.conf | grep -e "Web Access Port" -e "SSH Enable" -e "SSH Port" -e "TELNET Enable" -e "HomeLink" -e "ACL Enable" -e "Init ACL"
+
+#echo Serial number: $lp_SerialNumber
+#echo Date: $lp_Date
+#echo Model: $lp_Model
+#echo Firmware: $lp_Firmware
+#echo Server Name: $lp_ServerName
+#printf "\n"
+#echo enabling SSH: $lp_SSHEnable using port $lp_SSHPort
+#echo enabling Telnet: $lp_TELNETEnable using port $lp_TELNETPort
+#echo Web Management Port: $lp_WebAccessPort
+#echo enabling 2 step verification: $lp_2stepverification
+#echo enabling connection log: $lp_WriteConnectionLog
+#printf "\n"
+#echo enabling home folder: $lp_HomeLink
+#echo enabling ACL: 
+#printf "\n"
+#echo enabling Wake on LAN: $lp_WakeOnLan
+#echo enabling Disk Standby mode: $lp_DiskStandByTimeoutEnable
+#echo enabling Buzzer: $lp_BuzzerWarningEnable
+
+#echo Using NTP server: $lp_USENTPServer
+#echo last time check firmware live update: $lp_LatestCheckLiveUpdate
+#echo last time firmware live update: $lp_LatestLiveUpdate
+
+#printf "\n"
+#echo SSL info
+#cat $LPP/stunnel
+
+
+#printf "\n"
+#printf "\n"
+#printf "\n"
+#echo sorted crontab
+#cat $Path/etc/config/crontab| grep -E '^@|^\*|^[0-9]' | sort -n -k2 -k1
 
 
 #cat $Path/etc/config/uLinux.conf | grep "Stunnel" -A 2
 
 #cat $Path/Q*.html | grep -e "dmidecode\ -s\ bios-version" -e "hal_app\ --get_ec_version" -A 2 | grep -v \/a | grep -e Q -e S |sed  's/\n/ /g'
-
-
- 
-
-
-}
+#}
 
 
 
@@ -1342,8 +1464,8 @@ APP_input(){
         1)
         clear 
 
-        printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n" "App name" "Author" "Enable" "Version" "Status" "Date" 
-        cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6}'
+        printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s  %-10s\n" "App name" "Author" "Enable" "Version" "Status" "Date" "Install Path" 
+        cat $LPP/appinfo | sort -t " " -nk1| awk '{printf "%-25s  %-20s %-10s %-10s %-10s %-10s %-10s \n",$1,$2,$3,$4,$5,$6,$7}'
 
         press_enter 
         APP_informaiton
@@ -1624,12 +1746,13 @@ Systemlog_questions(){
 	    clear
 	   
         echo What information do you need from system log
-        echo 1. Grep system log using keyowrd \(or 11\)
+        echo 1. Grep system log using keyowrd \(or 60\)
         echo 2. Firmware upgrade history
         echo 3. Abnormal Reboot history
         echo 4. Print all system log 
         echo 5. Print access log
         echo 6. Print system log in short form
+        echo "   60. Search system log in short form"
         echo "   61. Power " 
         echo "   62. Storage & Snapshot " 
         echo "   63. Hybrid Backup sync " 
@@ -1637,10 +1760,13 @@ Systemlog_questions(){
         echo "   65. Network & Virtual Switch  "
         echo "   66. myQNAPcloud  "
         echo "   67. Firmware  "
-        echo "   68. Hardware Status (temperature..)  "
+        echo "   68. Hardware/Disk Status (temperature..)  "
         echo "   69. App Center "
         echo "   70. Manually Rebooting and Shutdown history"
         echo "   71. Malware Remover"
+        echo "   72. Antivirus"
+        echo "   73. QVPN service"
+        echo "   74. Domain Security"
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -1678,7 +1804,7 @@ Systemlog_input(){
            
              ;;
 
-              11)
+              60)
             clear
 
             echo Input your Keyword,the first keyword will be colored
@@ -1849,7 +1975,7 @@ Systemlog_input(){
             clear
 
 
-            cat $LPP/systemlog  | grep "\[Hard" | TinySys
+            cat $LPP/systemlog  | grep "\[Hard\|\[Disk" | TinySys
 
 
             press_enter 
@@ -1892,6 +2018,39 @@ Systemlog_input(){
             
              ;;
 
+            72)
+            clear
+
+            cat $LPP/systemlog  | grep "\[Anti" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+            73)
+            clear
+
+            cat $LPP/systemlog  | grep "\[QVPN" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+                         74)
+            clear
+
+            cat $LPP/systemlog  | grep "\[Dom" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
 
             7)
@@ -2313,6 +2472,10 @@ echo note: Install nmap using brew
         echo 3. nmap with configured port
         echo 4. curl -I with configured port
         echo 5. ping $myQNAPCloudUrl
+        echo 6. myQNAPcloud link log
+        echo 7. cat eagent info
+        echo 8. cat porter.log
+        echo 9. cat qid.log
         printf "\n"
         printf "\n"
         echo q. Leave
@@ -2391,6 +2554,65 @@ myQNAPcloud_input(){
 
         q)
         ;;
+
+6)
+        clear
+
+        cat $Path/tmp/.eagent.log
+        cat $Path/tmp/.tunnel_agent.log
+
+    
+
+
+        press_enter 
+        myQNAPcloud_information
+        ;;
+
+
+
+7)
+        clear
+
+        cat $Path/tmp/.eagent.log |  grep request | sed 's/\"//g'| sed 's/\,/\n/g' | sed 's/uri/\n\ uri/g' |sed 's/{pro/\n\ pro/g'
+  
+
+    
+
+
+        press_enter 
+        myQNAPcloud_information
+        ;;
+
+8)
+        clear
+
+        cat -v $Path/tmp/.porter.log | sed 's/\^\[//g'
+  
+
+    
+
+
+        press_enter 
+        myQNAPcloud_information
+        ;;
+
+
+9)
+        clear
+
+        cat -v $Path/tmp/.qid.log | sed 's/\^\[//g'
+  
+
+    
+
+
+        press_enter 
+        myQNAPcloud_information
+        ;;
+
+
+
+
 
 
          *)
@@ -3662,6 +3884,7 @@ fi
 echo `cat $LPP/kernellog | tail -n 1 | awk '{print $5}'| sed 's/\[//g'|cut -f1 -d"."`| awk '{printf "Power on time: %dD:%dH:%dM (%d) \n",$1/(60*60*24),$1%(60*60*24)/(60*60),$1/60%60,$1}'
 
 
+echo Segfault: $lp_Segfault
 echo "########################################"
 
 
@@ -3767,8 +3990,8 @@ echo 3.   RAID information
 echo 4.   APP information
 echo 5.   Disk information
 echo 6.   Shared Folders information
-echo 7.   System log information
-echo 8.   Kernel log information
+echo 7.   System log information\(s\)
+echo 8.   Kernel log information\(k\)
 echo 9.   Network information
 echo 10. Memory information
 echo 11. Cache information
@@ -3870,6 +4093,14 @@ case $ANS in
         press_enter
         ;;
     7)
+        clear
+
+        Systemlog_information
+
+        #press_enter
+        ;;
+
+    s)
         clear
 
         Systemlog_information
@@ -4025,6 +4256,16 @@ case $ANS in
 
     8)
         clear
+
+        Kernellog_questions
+
+        Kernellog_input
+
+
+        #press_enter
+        ;;
+
+    k)   clear
 
         Kernellog_questions
 
