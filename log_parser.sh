@@ -1767,6 +1767,8 @@ Systemlog_questions(){
         echo "   72. Antivirus"
         echo "   73. QVPN service"
         echo "   74. Domain Security"
+        echo "   75. NFS Service"
+        echo "   76. Win/Mac/NFS"
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -2052,6 +2054,29 @@ Systemlog_input(){
             
              ;;
 
+                                      75)
+            clear
+
+            cat $LPP/systemlog  | grep "\[NFS" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+
+                                      76)
+            clear
+
+            cat $LPP/systemlog  | grep "\[Win" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
 
             7)
             clear
