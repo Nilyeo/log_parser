@@ -10,7 +10,7 @@ sh log_parser.sh Q211I009382
 
 ### Best Practice
 
-1. Collect QTS/QuTS hero firmware version in header, Input 4 > 1 to list installed APPs for submitting Mantis
+1. Display firmware version in header, Input 4 > 1 to list installed APPs for quickly collect the required information for escalating the issue.
 2. Input 7 > 6 to see the system log in short form and with color highlighted
 3. Input 7 > 1 and input the keyword to filter the system log.
 
