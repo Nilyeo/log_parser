@@ -167,6 +167,8 @@
 # * add shortcut k to system log
 # * add segfault counts
 # * orgnize Basic information
+# 2023-06-12
+# *  add system log, Qsirch
 ######################################
 
 
@@ -1769,6 +1771,7 @@ Systemlog_questions(){
         echo "   74. Domain Security"
         echo "   75. NFS Service"
         echo "   76. Win/Mac/NFS"
+        echo "   77. Qsirch"
 
         #echo 7. Show only warning system log
         #echo 8. Show only error system log
@@ -2071,6 +2074,18 @@ Systemlog_input(){
             clear
 
             cat $LPP/systemlog  | grep "\[Win" |  TinySys
+
+
+            press_enter 
+            Systemlog_information      
+            
+             ;;
+
+
+                                                   77)
+            clear
+
+            cat $LPP/systemlog  | grep "\[Qsir" |  TinySys
 
 
             press_enter 
