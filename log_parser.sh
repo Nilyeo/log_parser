@@ -4337,3 +4337,10 @@ esac
 
 
 done
+
+
+
+## To get compatible disks
+
+####curl 'https://www.qnap.com/zh-tw/compatibility/com_get/com_get-result-by-nas.php?type=1&model=212&locale=en'   -H 'authority: www.qnap.com'   -H 'accept: */*'   -H 'accept-language: zh-TW,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6'   -H 'cookie: _gcl_au=1.1.1506867503.1690939718; _ALGOLIA=anonymous-84533568-2482-414c-9a9c-01b8e6ac203b; _ga2=GA1.2.477231510.1690939718; _fbp=fb.1.1690939718526.847895084; _uetvid=e878895030d311ee848e0fc71512852d; mtc_id=9181894; mtc_sid=pvvzjotsniwl8qgrrxbje2m; mautic_device_id=pvvzjotsniwl8qgrrxbje2m; locale=en; NAS_Lang_Set=en; locale=en; NAS_Lang_Set=en; _gid=GA1.2.1781269590.1692339460; _ga2_gid=GA1.2.428175979.1692339460; ln_or=eyI0MjA3MTk2IjoiZCJ9; _ga=GA1.2.477231510.1690939718; _ga_WYY3J1D90T=GS1.2.1692339460.2.1.1692339686.60.0.0; _gat_UA-1687532-28=1; _ga_EY724YNSBJ=GS1.1.1692339459.3.1.1692339804.60.0.0'   -H 'referer: https://www.qnap.com/en/compatibility/?model=212&category=27'   -H 'sec-ch-ua: "Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"'
+####  -H 'sec-ch-ua-mobile: ?0'   -H 'sec-ch-ua-platform: "Windows"'   -H 'sec-fetch-dest: empty'   -H 'sec-fetch-mode: cors'   -H 'sec-fetch-site: same-origin'   -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188'   -H 'x-requested-with: XMLHttpRequest'   --compressed | jq -r .[]
